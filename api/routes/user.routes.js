@@ -13,7 +13,8 @@ const restrictTo = require('../middlewares/role.middleware');
  *       200:
  *         description: List of users
  */
-router.get('/', auth, restrictTo(['admin']), userController.getAllUsers);
+router.get('/', userController.getAllUsers);
+// router.get('/', auth, restrictTo(['admin']), userController.getAllUsers);
 router.get('/:id', auth, userController.getUserById);
 router.post('/', auth, userController.createUser);
 router.put('/:id', auth, userController.updateUser);
