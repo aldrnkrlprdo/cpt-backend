@@ -1,13 +1,20 @@
 const express = require('express');
 const serverless = require('serverless-http');
+const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+// import routes
 const userRoutes = require('./routes/user.routes');
+const authRoutes = require('./routes/auth.routes');
 const { swaggerUi, specs } = require('./swagger');
 
 const app = express();
 app.use(express.json());
+app.use(cookieParser());
+
+// Auth
+app.use('/api/auth', authRoutes);
 
 // Swagger
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));

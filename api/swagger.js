@@ -5,11 +5,11 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'My Express API',
+      title: 'Vercel Express API',
       version: '1.0.0',
     },
   },
-  apis: ['./routes/*.js'], // Path to your route files
+  apis: ['./api/routes/*.js'],
 };
 
 const specs = swaggerJsdoc(options);
