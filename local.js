@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 require('dotenv').config();
 
 const userRoutes = require('./api/routes/user.routes');
@@ -9,6 +10,7 @@ const { swaggerUi, specs } = require('./api/swagger');
 const app = express();
 app.use(express.json());
 app.use(require('cookie-parser')());
+app.use(cors());
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/api/users', userRoutes);
