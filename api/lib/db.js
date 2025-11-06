@@ -10,13 +10,30 @@ async function connectDB() {
   if (cached.conn) return cached.conn;
 
   if (!cached.promise) {
-    cached.promise = mongoose.connect(process.env.MONGO_URI, {
+    const options = {
       bufferCommands: false,
-    }).then((m) => m);
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+    };
+
+    try {
+      cached.promise = mongoose.connect(process.env.MONGO_URI, options);
+    } catch (err) {
+      console.error('MongoDB connection error:', {
+        message: err.message,
+        code: err.code,
+        reason: err.reason
+      });
+      throw err;
+    }
   }
 
-  cached.conn = await cached.promise;
-  return cached.conn;
+  try {
+    cached.conn = await cached.promise;
+    return cached.conn;
+  } catch (err) {
+    cached.promise = null;
+    throw err;
+  }
 }
 
 module.exports = connectDB;
