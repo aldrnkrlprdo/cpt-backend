@@ -8,5 +8,12 @@
     { "src": "/api/users/(.*)", "dest": "api/users.js" },
     { "src": "/api-docs/(.*)", "dest": "api/docs.js" },
     { "src": "/(.*)", "dest": "api/index.js" }
-  ]
+  ],
+  "functions": {
+    "api/**/*.js": {
+      "runtime": "nodejs18.x",
+      "regions": ["hkg1"],
+      "maxDuration": 10
+    }
+  }
 }

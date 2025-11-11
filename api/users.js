@@ -20,6 +20,7 @@ const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,h
 
 const corsOptions = {
   origin: (origin, callback) => {
+     console.log("Request origin:", origin);
     // allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
     if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
@@ -36,7 +37,7 @@ app.options('*', cors(corsOptions));
 // Apply CORS to all routes
 app.use(cors(corsOptions));
 
-app.use('/api/users', userRoutes);
+app.use('/api/users', express.json({ limit: '10mb' }), express.urlencoded({ limit: '10mb', extended: true }), userRoutes);
 
 connectDB().then(() => console.log('✅ MongoDB connected (users.js)')).catch(console.error);
 

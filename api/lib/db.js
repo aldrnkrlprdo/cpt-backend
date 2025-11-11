@@ -12,7 +12,7 @@ async function connectDB() {
   if (!cached.promise) {
     const options = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 3000, // Timeout after 5s instead of 30s
     };
 
     try {
