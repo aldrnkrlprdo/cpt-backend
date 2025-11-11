@@ -10,12 +10,31 @@ const authRoutes = require('./routes/auth.routes');
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({
-  origin: ['http://localhost:3000', 'http://localhost:5173'], // Add your frontend origins
+
+// CORS setup (use ALLOWED_ORIGINS env var, comma-separated)
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173')
+  .split(',')
+  .map(s => s.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    // allow requests with no origin (mobile apps, curl, server-to-server)
+    if (!origin) return callback(null, true);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error('CORS policy: Origin not allowed'));
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true // Enable if you're using cookies/sessions
-}));
+  credentials: true,
+};
+
+// Handle preflight quickly on Vercel serverless routes
+app.options('*', cors(corsOptions));
+
+// Apply CORS to all routes
+app.use(cors(corsOptions));
+
 app.use('/api/auth', authRoutes);
 
 // Connect DB once per container

@@ -12,7 +12,6 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-// ...existing code...
 // CORS setup (use ALLOWED_ORIGINS env var, comma-separated)
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173')
   .split(',')
@@ -39,7 +38,6 @@ app.use(cors(corsOptions));
 
 app.use('/api/users', userRoutes);
 
-// ...existing code...
 connectDB().then(() => console.log('✅ MongoDB connected (users.js)')).catch(console.error);
 
 app.use((err, req, res, next) => {
