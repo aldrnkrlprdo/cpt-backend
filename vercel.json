@@ -9,10 +9,5 @@
     { "src": "/api-docs/(.*)", "dest": "api/docs.js" },
     { "src": "/(.*)", "dest": "api/index.js" }
   ],
-  "functions": {
-    "api/auth.js": { "runtime": "nodejs18.x", "regions": ["hkg1"] },
-    "api/users.js": { "runtime": "nodejs18.x", "regions": ["hkg1"] },
-    "api/docs.js": { "runtime": "nodejs18.x", "regions": ["hkg1"] },
-    "api/index.js": { "runtime": "nodejs18.x", "regions": ["hkg1"] }
-  }
+  "regions": ["hkg1"]
 }
