@@ -3,7 +3,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/user.model');
 
 exports.register = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { firstname, lastname, username, email, password, role, status } = req.body;
 
   try {
     // Check if user already exists
@@ -15,9 +15,13 @@ exports.register = async (req, res) => {
 
     // Create user
     const user = await User.create({
-      name,
+      firstname,
+      lastname,
+      username,
       email,
       password: hashedPassword,
+      role,
+      status
     });
 
     // Generate access token
@@ -29,7 +33,7 @@ exports.register = async (req, res) => {
 
     res.status(201).json({
       message: 'User registered successfully',
-      user: { id: user._id, name: user.name, email: user.email },
+      user: { id: user._id, username: user.username, email: user.email },
       token,
     });
   } catch (err) {
