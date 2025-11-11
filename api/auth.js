@@ -30,7 +30,7 @@ const corsOptions = {
 };
 
 // Handle preflight quickly on Vercel serverless routes
-app.options('*', cors(corsOptions));
+app.options(/.*/, cors(corsOptions));
 
 // Apply CORS to all routes
 app.use(cors(corsOptions));
