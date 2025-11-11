@@ -12,7 +12,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // CORS setup (use ALLOWED_ORIGINS env var, comma-separated)
-const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173')
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || 'http://localhost:3000,http://localhost:5173,https://nbs-coop.vercel.app')
   .split(',')
   .map(s => s.trim())
   .filter(Boolean);
