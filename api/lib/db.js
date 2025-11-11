@@ -1,3 +1,4 @@
+// lib/db.js
 const mongoose = require('mongoose');
 
 let cached = global.mongoose;
@@ -12,26 +13,18 @@ async function connectDB() {
   if (!cached.promise) {
     const options = {
       bufferCommands: false,
-      serverSelectionTimeoutMS: 3000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 5000, // fail fast if Mongo unreachable
     };
-
-    try {
-      cached.promise = mongoose.connect(process.env.MONGO_URI, options);
-    } catch (err) {
-      console.error('MongoDB connection error:', {
-        message: err.message,
-        code: err.code,
-        reason: err.reason
-      });
-      throw err;
-    }
+    cached.promise = mongoose.connect(process.env.MONGODB_URI, options);
   }
 
   try {
     cached.conn = await cached.promise;
+    console.log('✅ MongoDB connected');
     return cached.conn;
   } catch (err) {
     cached.promise = null;
+    console.error('❌ MongoDB connection failed:', err.message);
     throw err;
   }
 }
