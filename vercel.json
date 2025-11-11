@@ -3,12 +3,6 @@
   "builds": [
     { "src": "api/{auth,users,docs,index}.js", "use": "@vercel/node" }
   ],
-  "routes": [
-    { "src": "/api/auth/(.*)", "dest": "api/auth.js" },
-    { "src": "/api/users/(.*)", "dest": "api/users.js" },
-    { "src": "/api-docs/(.*)", "dest": "api/docs.js" },
-    { "src": "/(.*)", "dest": "api/index.js" }
-  ],
   "headers": [
     {
       "source": "/api/(.*)",
@@ -19,5 +13,11 @@
         { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization" }
       ]
     }
+  ],
+  "routes": [
+    { "src": "/api/auth/(.*)", "dest": "api/auth.js" },
+    { "src": "/api/users/(.*)", "dest": "api/users.js" },
+    { "src": "/api-docs/(.*)", "dest": "api/docs.js" },
+    { "src": "/(.*)", "dest": "api/index.js" }
   ]
 }
