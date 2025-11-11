@@ -8,8 +8,7 @@ const connectDB = require('./lib/db');
 const authRoutes = require('./routes/auth.routes');
 
 const app = express();
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ limit: '10mb', extended: true }));
+// app.use(express.json());
 app.use(cookieParser());
 
 // CORS setup (use ALLOWED_ORIGINS env var, comma-separated)
@@ -36,7 +35,7 @@ app.options(/.*/, cors(corsOptions));
 // Apply CORS to all routes
 app.use(cors(corsOptions));
 
-app.use('/api/auth', authRoutes);
+app.use('/api/auth', express.json({ limit: '10mb' }), express.urlencoded({ limit: '10mb', extended: true }), authRoutes);
 
 // Connect DB once per container
 connectDB().then(() => console.log('✅ MongoDB connected (auth.js)')).catch(console.error);
