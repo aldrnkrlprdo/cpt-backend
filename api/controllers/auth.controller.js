@@ -21,7 +21,7 @@ const generateTokens = (user) => {
 };
 
 exports.register = async (req, res) => {
-  const { firstname, lastname, username, email, password, role, status } = req.body;
+  const { firstName, lastName, username, email, password, role, status } = req.body;
 
   try {
     await connectDB(); // ✅ ensure DB connection
@@ -35,8 +35,8 @@ exports.register = async (req, res) => {
 
     // Create user
     const user = await User.create({
-      firstname,
-      lastname,
+      firstName,
+      lastName,
       username,
       email,
       password: hashedPassword,
