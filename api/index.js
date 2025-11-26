@@ -50,4 +50,4 @@ app.use((err, req, res, next) => {
 // Connect DB once per container
 connectDB().catch(console.error);
 
-module.exports = serverless(app);
+module.exports.handler = serverless(app);
