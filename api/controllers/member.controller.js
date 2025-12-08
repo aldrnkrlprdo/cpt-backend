@@ -1,107 +1,104 @@
 
+const Member = require('../models/member.model');
 const User = require('../models/user.model');
 const connectDB = require('../lib/db');
-const bcrypt = require('bcryptjs');
 
-// @desc    Get all members
-// @route   GET /api/members
-// @access  Private/Admin
-exports.getAllMembers = async (req, res) => {
-  try {
-    await connectDB();
-    const users = await User.find().select('-password');
-    res.json(users);
-  } catch (err) {
-    console.error('GetAllMembers error:', err);
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// @desc    Create a new member
-// @route   POST /api/members
-// @access  Private/Admin
+// Create a new member profile
 exports.createMember = async (req, res) => {
-  const { firstName, lastName, username, email, password, role, status } = req.body;
-
   try {
     await connectDB();
+    const { userId, membershipId, address, phoneNumber } = req.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: 'Email already registered' });
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Check if member profile already exists for this user
+    const existingMemberForUser = await Member.findOne({ user: userId });
+    if (existingMemberForUser) {
+      return res.status(400).json({ error: 'Member profile already exists for this user' });
+    }
 
-    const user = await User.create({
-      firstName,
-      lastName,
-      username,
-      email,
-      password: hashedPassword,
-      role,
-      status
+    // Check if membershipId is unique
+    const existingMemberWithId = await Member.findOne({ membershipId });
+    if (existingMemberWithId) {
+      return res.status(400).json({ error: 'Membership ID is already in use' });
+    }
+
+    const newMember = new Member({
+      user: userId,
+      membershipId,
+      address,
+      phoneNumber,
     });
 
-    const member = user.toObject();
-    delete member.password;
-
-    res.status(201).json({ message: 'Member created successfully', member });
+    await newMember.save();
+    res.status(201).json({ message: 'Member created successfully', member: newMember });
   } catch (err) {
     console.error('CreateMember error:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// @desc    Get a single member by ID
-// @route   GET /api/members/:id
-// @access  Private/Admin
+// Get all members
+exports.getAllMembers = async (req, res) => {
+  try {
+    await connectDB();
+    const members = await Member.find().populate('user', 'firstName lastName email username');
+    res.json(members);
+  } catch (err) {
+    console.error('GetAllMembers error:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Get a single member by ID
 exports.getMemberById = async (req, res) => {
   try {
     await connectDB();
-    const user = await User.findById(req.params.id).select('-password');
-    if (!user) return res.status(404).json({ error: 'Member not found' });
-    res.json(user);
+    const member = await Member.findById(req.params.id).populate('user', 'firstName lastName email username');
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+    res.json(member);
   } catch (err) {
     console.error('GetMemberById error:', err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// @desc    Update a member
-// @route   PUT /api/members/:id
-// @access  Private/Admin
+// Update a member's details
 exports.updateMember = async (req, res) => {
   try {
     await connectDB();
-    const { firstName, lastName, email, username, role, status } = req.body;
-    const updateData = { firstName, lastName, email, username, role, status };
+    const { membershipStatus, address, phoneNumber } = req.body;
 
-    const user = await User.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true,
-    }).select('-password');
+    const updatedMember = await Member.findByIdAndUpdate(
+      req.params.id,
+      { membershipStatus, address, phoneNumber },
+      { new: true, runValidators: true }
+    ).populate('user', 'firstName lastName email username');
 
-    if (!user) return res.status(404).json({ error: 'Member not found' });
-
-    res.json({ message: 'Member updated successfully', user });
+    if (!updatedMember) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
+    res.json({ message: 'Member updated successfully', member: updatedMember });
   } catch (err) {
     console.error('UpdateMember error:', err);
-    if (err.code === 11000) {
-      return res.status(400).json({ error: 'Email or username already exists.' });
-    }
     res.status(500).json({ error: err.message });
   }
 };
 
-// @desc    Delete a member
-// @route   DELETE /api/members/:id
-// @access  Private/Admin
+// Delete a member profile
 exports.deleteMember = async (req, res) => {
   try {
     await connectDB();
-    const user = await User.findByIdAndDelete(req.params.id);
-
-    if (!user) return res.status(404).json({ error: 'Member not found' });
-
+    const deletedMember = await Member.findByIdAndDelete(req.params.id);
+    if (!deletedMember) {
+      return res.status(404).json({ error: 'Member not found' });
+    }
     res.json({ message: 'Member deleted successfully' });
   } catch (err) {
     console.error('DeleteMember error:', err);
