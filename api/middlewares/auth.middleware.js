@@ -13,6 +13,7 @@ const auth = async (req, res, next) => {
     req.user = { id: user._id, role: user.role };
     next();
   } catch (err) {
+    console.log("Error verifying JWT: ", err.message);
     res.status(401).json({ error: 'Invalid token' });
   }
 };
