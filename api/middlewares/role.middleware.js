@@ -1,9 +1,11 @@
 // middlewares/role.middleware.js
-module.exports = (roles) => {
+const role = (...allowedRoles) => {
   return (req, res, next) => {
-    if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ error: 'Forbidden: insufficient permissions' });
+    if (!req.user || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ error: 'Forbidden: Insufficient privileges' });
     }
     next();
   };
 };
+
+module.exports = role;

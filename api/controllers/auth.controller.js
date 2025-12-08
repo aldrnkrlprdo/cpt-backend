@@ -118,3 +118,47 @@ exports.refresh = async (req, res) => {
     res.status(403).json({ error: 'Invalid refresh token' });
   }
 };
+
+exports.me = async (req, res) => {
+  try {
+    await connectDB(); // ⬅ ensure DB connected
+    const user = await User.findById(req.user.id).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (err) {
+    console.error('Me error:', err);
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.updateProfile = async (req, res) => {
+  try {
+    await connectDB();
+    const { firstName, lastName, email, username } = req.body;
+
+    // Prevent password updates through this endpoint
+    const updateData = { firstName, lastName, email, username };
+
+    const user = await User.findByIdAndUpdate(req.user.id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'Profile updated successfully', user });
+  } catch (err) {
+    console.error('UpdateProfile error:', err);
+    // Handle potential duplicate key errors (e.g., username or email)
+    if (err.code === 11000) {
+      return res.status(400).json({ error: 'Email or username already exists.' });
+    }
+    res.status(500).json({ error: err.message });
+  }
+};

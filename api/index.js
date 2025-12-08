@@ -8,6 +8,7 @@ require('dotenv').config();
 const connectDB = require('./lib/db');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
+const memberRoutes = require('./routes/member.routes');
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use(cookieParser());
 // Per-route JSON parsing (prevents raw-body mismatch)
 app.use('/api/auth', express.json({ limit: '10mb' }), authRoutes);
 app.use('/api/users', express.json({ limit: '10mb' }), userRoutes);
+app.use('/api/members', express.json({ limit: '10mb' }), memberRoutes);
 
 // Optional: simple ping route to keep container warm
 app.get('/api/ping', (req, res) => res.json({ ok: true }));
