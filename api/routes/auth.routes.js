@@ -6,7 +6,7 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.post('/refresh', authController.refresh);
 router.route('/me')
-  .get(auth, authController.me)
-  .put(auth, authController.updateProfile);
+  .get(authController.me)
+  .put(authController.updateProfile);
 
 module.exports = router;
