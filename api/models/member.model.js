@@ -1,12 +1,18 @@
 
 const mongoose = require('mongoose');
-
 const memberSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+  firstName: {
+    type: String,
     required: true,
+  },
+  lastName: {
+    type: String,
+    required: true,
+  },
+  email: {
+    type: String,
     unique: true,
+    required: true,
   },
   membershipId: {
     type: String,

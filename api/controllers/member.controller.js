@@ -7,18 +7,12 @@ const connectDB = require('../lib/db');
 exports.createMember = async (req, res) => {
   try {
     await connectDB();
-    const { userId, membershipId, address, phoneNumber } = req.body;
+    const { firstName, lastName, email, membershipId, address, phoneNumber } = req.body;
 
-    // Check if user exists
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    // Check if member profile already exists for this user
-    const existingMemberForUser = await Member.findOne({ user: userId });
-    if (existingMemberForUser) {
-      return res.status(400).json({ error: 'Member profile already exists for this user' });
+    // Check if member with this email already exists
+    const existingMemberWithEmail = await Member.findOne({ email });
+    if (existingMemberWithEmail) {
+      return res.status(400).json({ error: 'Member with this email already exists' });
     }
 
     // Check if membershipId is unique
@@ -28,7 +22,9 @@ exports.createMember = async (req, res) => {
     }
 
     const newMember = new Member({
-      user: userId,
+      firstName,
+      lastName,
+      email,
       membershipId,
       address,
       phoneNumber,
@@ -46,7 +42,7 @@ exports.createMember = async (req, res) => {
 exports.getAllMembers = async (req, res) => {
   try {
     await connectDB();
-    const members = await Member.find().populate('user', 'firstName lastName email username');
+    const members = await Member.find();
     res.json(members);
   } catch (err) {
     console.error('GetAllMembers error:', err);
@@ -58,7 +54,7 @@ exports.getAllMembers = async (req, res) => {
 exports.getMemberById = async (req, res) => {
   try {
     await connectDB();
-    const member = await Member.findById(req.params.id).populate('user', 'firstName lastName email username');
+    const member = await Member.findById(req.params.id);
     if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
@@ -73,13 +69,13 @@ exports.getMemberById = async (req, res) => {
 exports.updateMember = async (req, res) => {
   try {
     await connectDB();
-    const { membershipStatus, address, phoneNumber } = req.body;
+    const { firstName, lastName, email, membershipStatus, address, phoneNumber } = req.body;
 
     const updatedMember = await Member.findByIdAndUpdate(
       req.params.id,
-      { membershipStatus, address, phoneNumber },
+      { firstName, lastName, email, membershipStatus, address, phoneNumber },
       { new: true, runValidators: true }
-    ).populate('user', 'firstName lastName email username');
+    );
 
     if (!updatedMember) {
       return res.status(404).json({ error: 'Member not found' });
