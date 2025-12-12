@@ -16,9 +16,11 @@ exports.createMember = async (req, res) => {
     }
 
     // Check if membershipId is unique
-    const existingMemberWithId = await Member.findOne({ membershipId });
-    if (existingMemberWithId) {
-      return res.status(400).json({ error: 'Membership ID is already in use' });
+    if (membershipId) {
+      const existingMemberWithId = await Member.findOne({ membershipId });
+      if (existingMemberWithId) {
+        return res.status(400).json({ error: 'Membership ID is already in use' });
+      }
     }
 
     const newMember = new Member({
