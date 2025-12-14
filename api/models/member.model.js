@@ -16,8 +16,7 @@ const memberSchema = new mongoose.Schema({
   },
   membershipId: {
     type: String,
-    unique: true,
-    required: true,
+    unique: true
   },
   dateOfJoining: {
     type: Date,
@@ -36,5 +35,23 @@ const memberSchema = new mongoose.Schema({
   },
   phoneNumber: String,
 }, { timestamps: true });
+
+// Pre-save hook to generate membershipId
+memberSchema.pre('save', async function (next) {
+  if (this.isNew && !this.membershipId) {
+    let isUnique = false;
+    let newId;
+    while (!isUnique) {
+      // Generate a random 6-digit ID
+      newId = Math.floor(100000 + Math.random() * 900000).toString();
+      const existingMember = await mongoose.model('Member').findOne({ membershipId: newId });
+      if (!existingMember) {
+        isUnique = true;
+      }
+    }
+    this.membershipId = newId;
+  }
+  next();
+});
 
 module.exports = mongoose.model('Member', memberSchema);
