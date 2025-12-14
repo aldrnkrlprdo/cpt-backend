@@ -1,7 +1,7 @@
 
-const Member = require('../models/member.model');
-const User = require('../models/user.model');
 const connectDB = require('../lib/db');
+const Member = require('../models/member.model');
+const mongoose = require('mongoose');
 
 // Create a new member profile
 exports.createMember = async (req, res) => {
@@ -52,11 +52,19 @@ exports.getAllMembers = async (req, res) => {
   }
 };
 
-// Get a single member by ID
+// Get a single member by ID or membershipId
 exports.getMemberById = async (req, res) => {
   try {
     await connectDB();
-    const member = await Member.findById(req.params.id);
+    const { id } = req.params;
+    let member;
+
+    if (mongoose.Types.ObjectId.isValid(id)) {
+      member = await Member.findById(id);
+    } else {
+      member = await Member.findOne({ membershipId: id });
+    }
+
     if (!member) {
       return res.status(404).json({ error: 'Member not found' });
     }
@@ -67,14 +75,19 @@ exports.getMemberById = async (req, res) => {
   }
 };
 
-// Update a member's details
+// Update a member's details by ID or membershipId
 exports.updateMember = async (req, res) => {
   try {
     await connectDB();
+    const { id } = req.params;
     const { firstName, lastName, email, membershipStatus, address, phoneNumber } = req.body;
 
-    const updatedMember = await Member.findByIdAndUpdate(
-      req.params.id,
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { membershipId: id };
+
+    const updatedMember = await Member.findOneAndUpdate(
+      query,
       { firstName, lastName, email, membershipStatus, address, phoneNumber },
       { new: true, runValidators: true }
     );
@@ -89,11 +102,18 @@ exports.updateMember = async (req, res) => {
   }
 };
 
-// Delete a member profile
+// Delete a member profile by ID or membershipId
 exports.deleteMember = async (req, res) => {
   try {
     await connectDB();
-    const deletedMember = await Member.findByIdAndDelete(req.params.id);
+    const { id } = req.params;
+
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { membershipId: id };
+
+    const deletedMember = await Member.findOneAndDelete(query);
+
     if (!deletedMember) {
       return res.status(404).json({ error: 'Member not found' });
     }
