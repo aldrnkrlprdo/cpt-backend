@@ -76,15 +76,34 @@ exports.updateUser = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const { firstName, lastName, email, username, role, status } = req.body;
+    const { firstName, lastName, email, username, role, status, password } = req.body;
+
+    // Prevent empty updates
+    if (Object.keys(req.body).length === 0) {
+      return res.status(400).json({ error: 'No update data provided.' });
+    }
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
       : { username: id };
 
-    const updateData = { firstName, lastName, email, username, role, status };
+    const updateData = {};
+    if (firstName) updateData.firstName = firstName;
+    if (lastName) updateData.lastName = lastName;
+    if (email) updateData.email = email;
+    if (username) updateData.username = username;
+    if (role) updateData.role = role;
+    if (status) updateData.status = status;
 
-    const updatedUser = await User.findOneAndUpdate(query, updateData, {
+    // Hash password if provided
+    if (password) {
+      if (password.trim().length < 6) { // Example validation
+        return res.status(400).json({ error: 'Password must be at least 6 characters long.' });
+      }
+      updateData.password = await bcrypt.hash(password, 10);
+    }
+
+    const updatedUser = await User.findOneAndUpdate(query, { $set: updateData }, {
       new: true,
       runValidators: true,
     }).select('-password');
