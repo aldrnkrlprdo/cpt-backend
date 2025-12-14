@@ -2,7 +2,10 @@ const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/user.controller');
 const auth = require('../middlewares/auth.middleware');
+const role = require('../middlewares/role.middleware');
 
+// All routes in this file are protected and require admin role
+router.use(auth, role('admin'));
 /**
  * @swagger
  * /api/users:
@@ -19,9 +22,11 @@ const auth = require('../middlewares/auth.middleware');
  *             schema:
  *               type: array
  */
-router.get('/', auth, userController.getAllUsers);
-router.post('/', auth, userController.createUser);
-router.put('/:id', auth, userController.updateUser);
-router.delete('/:id', auth, userController.deleteUser);
+router.route('/')
+    .get(userController.getAllUsers)
+    .post(userController.createUser)
+router.route('/:id')
+    .put(userController.updateUser)
+    .delete(userController.deleteUser)
 
 module.exports = router;

@@ -6,7 +6,7 @@ const auth = require('../middlewares/auth.middleware');
 const role = require('../middlewares/role.middleware');
 
 // All routes in this file are protected and require admin role
-router.use(auth, role('admin'));
+router.use(auth);
 
 router.route('/')
   .get(memberController.getAllMembers)
