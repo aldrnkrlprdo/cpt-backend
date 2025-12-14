@@ -21,5 +21,7 @@ const auth = require('../middlewares/auth.middleware');
  */
 router.get('/', auth, userController.getAllUsers);
 router.post('/', auth, userController.createUser);
+router.put('/:id', auth, userController.updateUser);
+router.delete('/:id', auth, userController.deleteUser);
 
 module.exports = router;
