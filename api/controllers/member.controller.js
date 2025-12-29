@@ -44,7 +44,29 @@ exports.createMember = async (req, res) => {
 exports.getAllMembers = async (req, res) => {
   try {
     await connectDB();
-    const members = await Member.find();
+    const { name, employeeId, email, status } = req.query;
+    const filter = {};
+
+    if (name) {
+      filter.$or = [
+        { firstName: { $regex: name, $options: 'i' } },
+        { lastName: { $regex: name, $options: 'i' } },
+      ];
+    }
+
+    if (employeeId) {
+      filter.employeeId = employeeId;
+    }
+
+    if (email) {
+      filter.email = { $regex: email, $options: 'i' };
+    }
+
+    if (status) {
+      filter.membershipStatus = status;
+    }
+
+    const members = await Member.find(filter);
     res.json(members);
   } catch (err) {
     console.error('GetAllMembers error:', err);
