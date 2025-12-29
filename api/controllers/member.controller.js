@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 exports.createMember = async (req, res) => {
   try {
     await connectDB();
-    const { firstName, lastName, email, membershipId, address, phoneNumber } = req.body;
+    const { firstName, lastName, email, employeeId, address, phoneNumber } = req.body;
 
     // Check if member with this email already exists
     const existingMemberWithEmail = await Member.findOne({ email });
@@ -15,11 +15,11 @@ exports.createMember = async (req, res) => {
       return res.status(400).json({ error: 'Member with this email already exists' });
     }
 
-    // Check if membershipId is unique
-    if (membershipId !== undefined) {
-      const existingMemberWithId = await Member.findOne({ membershipId });
+    // Check if employeeId is unique
+    if (employeeId !== undefined) {
+      const existingMemberWithId = await Member.findOne({ employeeId });
       if (existingMemberWithId) {
-        return res.status(400).json({ error: 'Membership ID is already in use' });
+        return res.status(400).json({ error: 'Employee ID is already in use' });
       }
     }
 
@@ -27,7 +27,7 @@ exports.createMember = async (req, res) => {
       firstName,
       lastName,
       email,
-      membershipId,
+      employeeId,
       address,
       phoneNumber,
     });
@@ -52,7 +52,7 @@ exports.getAllMembers = async (req, res) => {
   }
 };
 
-// Get a single member by ID or membershipId
+// Get a single member by ID or employeeId
 exports.getMemberById = async (req, res) => {
   try {
     await connectDB();
@@ -62,7 +62,7 @@ exports.getMemberById = async (req, res) => {
     if (mongoose.Types.ObjectId.isValid(id)) {
       member = await Member.findById(id);
     } else {
-      member = await Member.findOne({ membershipId: id });
+      member = await Member.findOne({ employeeId: id });
     }
 
     if (!member) {
@@ -75,7 +75,7 @@ exports.getMemberById = async (req, res) => {
   }
 };
 
-// Update a member's details by ID or membershipId
+// Update a member's details by ID or employeeId
 exports.updateMember = async (req, res) => {
   try {
     await connectDB();
@@ -84,7 +84,7 @@ exports.updateMember = async (req, res) => {
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
-      : { membershipId: id };
+      : { employeeId: id };
 
     const updatedMember = await Member.findOneAndUpdate(
       query,
@@ -102,7 +102,7 @@ exports.updateMember = async (req, res) => {
   }
 };
 
-// Delete a member profile by ID or membershipId
+// Delete a member profile by ID or employeeId
 exports.deleteMember = async (req, res) => {
   try {
     await connectDB();
@@ -110,7 +110,7 @@ exports.deleteMember = async (req, res) => {
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
-      : { membershipId: id };
+      : { employeeId: id };
 
     const deletedMember = await Member.findOneAndDelete(query);
 

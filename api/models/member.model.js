@@ -14,7 +14,7 @@ const memberSchema = new mongoose.Schema({
     unique: true,
     required: true,
   },
-  membershipId: {
+  employeeId: {
     type: String,
     unique: true
   },
@@ -36,20 +36,20 @@ const memberSchema = new mongoose.Schema({
   phoneNumber: String,
 }, { timestamps: true });
 
-// Pre-save hook to generate membershipId
+// Pre-save hook to generate employeeId
 memberSchema.pre('save', async function (next) {
-  if (this.isNew && !this.membershipId) {
+  if (this.isNew && !this.employeeId) {
     let isUnique = false;
     let newId;
     while (!isUnique) {
       // Generate a random 6-digit ID
       newId = Math.floor(100000 + Math.random() * 900000).toString();
-      const existingMember = await mongoose.model('Member').findOne({ membershipId: newId });
+      const existingMember = await mongoose.model('Member').findOne({ employeeId: newId });
       if (!existingMember) {
         isUnique = true;
       }
     }
-    this.membershipId = newId;
+    this.employeeId = newId;
   }
   next();
 });
