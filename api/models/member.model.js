@@ -39,17 +39,20 @@ const memberSchema = new mongoose.Schema({
 // Pre-save hook to generate employeeId
 memberSchema.pre('save', async function (next) {
   if (this.isNew && !this.employeeId) {
-    let isUnique = false;
-    let newId;
-    while (!isUnique) {
-      // Generate a random 6-digit ID
-      newId = Math.floor(100000 + Math.random() * 900000).toString();
-      const existingMember = await mongoose.model('Member').findOne({ employeeId: newId });
-      if (!existingMember) {
-        isUnique = true;
-      }
+    const Member = this.constructor;
+    // Find the last member created to determine the next employeeId
+    const lastMember = await Member.findOne({}, {}, { sort: { 'employeeId': -1 } });
+
+    let nextId;
+    if (lastMember && lastMember.employeeId) {
+      // Increment the last employeeId
+      nextId = parseInt(lastMember.employeeId, 10) + 1;
+    } else {
+      // This is the first member, start with a base ID (e.g., 100001)
+      nextId = "000001";
     }
-    this.employeeId = newId;
+
+    this.employeeId = nextId.toString();
   }
   next();
 });
