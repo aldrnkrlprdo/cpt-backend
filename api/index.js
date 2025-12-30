@@ -9,6 +9,8 @@ const connectDB = require('./lib/db');
 const authRoutes = require('./routes/auth.routes');
 const userRoutes = require('./routes/user.routes');
 const memberRoutes = require('./routes/member.routes');
+const branchRoutes = require('./routes/branch.routes');
+const loanTypeRoutes = require('./routes/loanType.routes');
 
 const app = express();
 
@@ -39,6 +41,8 @@ app.use(cookieParser());
 app.use('/api/auth', express.json({ limit: '10mb' }), authRoutes);
 app.use('/api/users', express.json({ limit: '10mb' }), userRoutes);
 app.use('/api/members', express.json({ limit: '10mb' }), memberRoutes);
+app.use('/api/branches', express.json({ limit: '10mb' }), branchRoutes);
+app.use('/api/loan-types', express.json({ limit: '10mb' }), loanTypeRoutes);
 
 // Optional: simple ping route to keep container warm
 app.get('/api/ping', (req, res) => res.json({ ok: true }));

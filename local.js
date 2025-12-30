@@ -5,6 +5,9 @@ require('dotenv').config();
 
 const userRoutes = require('./api/routes/user.routes');
 const authRoutes = require('./api/routes/auth.routes');
+const memberRoutes = require('./api/routes/member.routes');
+const branchRoutes = require('./api/routes/branch.routes');
+const loanTypeRoutes = require('./api/routes/loanType.routes');
 const { swaggerUi, specs } = require('./api/swagger');
 
 const app = express();
@@ -15,6 +18,9 @@ app.use(cors());
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/members', memberRoutes);
+app.use('/api/branches', branchRoutes);
+app.use('/api/loantypes', loanTypeRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
