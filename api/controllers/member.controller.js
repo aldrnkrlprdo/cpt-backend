@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 exports.createMember = async (req, res) => {
   try {
     await connectDB();
-    const { firstName, lastName, email, employeeId, address, phoneNumber } = req.body;
+    const { firstName, lastName, email, employeeId, dateOfJoining, membershipStatus, address, phoneNumber } = req.body;
 
     // Check if member with this email already exists
     const existingMemberWithEmail = await Member.findOne({ email });
@@ -28,6 +28,8 @@ exports.createMember = async (req, res) => {
       lastName,
       email,
       employeeId,
+      dateOfJoining,
+      membershipStatus,
       address,
       phoneNumber,
     });
@@ -102,7 +104,7 @@ exports.updateMember = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const { firstName, lastName, email, membershipStatus, address, phoneNumber } = req.body;
+    const { firstName, lastName, email, dateOfJoining, membershipStatus, address, phoneNumber } = req.body;
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
@@ -110,7 +112,7 @@ exports.updateMember = async (req, res) => {
 
     const updatedMember = await Member.findOneAndUpdate(
       query,
-      { firstName, lastName, email, membershipStatus, address, phoneNumber },
+      { firstName, lastName, email, dateOfJoining, membershipStatus, address, phoneNumber },
       { new: true, runValidators: true }
     );
 
