@@ -49,11 +49,11 @@ exports.getAllBranches = async (req, res) => {
 exports.getBranchById = async (req, res) => {
   try {
     await connectDB();
-    const { branchCode } = req.params;
+    const { id } = req.params;
 
-    const query = mongoose.Types.ObjectId.isValid(branchCode)
-      ? { _id: branchCode }
-      : { branchCode: branchCode };
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { branchCode: id };
 
     const branch = await Branch.findOne(query);
 
@@ -71,16 +71,16 @@ exports.getBranchById = async (req, res) => {
 exports.updateBranch = async (req, res) => {
   try {
     await connectDB();
-    const { branchCode } = req.params;
+    const { id } = req.params;
     const { branchName } = req.body;
 
     if (!branchName) {
       return res.status(400).json({ error: 'Branch name is required.' });
     }
 
-    const query = mongoose.Types.ObjectId.isValid(branchCode)
-      ? { _id: branchCode }
-      : { branchCode: branchCode };
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { branchCode: id };
 
     const updatedBranch = await Branch.findOneAndUpdate(query, { branchName }, {
       new: true,
@@ -104,11 +104,11 @@ exports.updateBranch = async (req, res) => {
 exports.deleteBranch = async (req, res) => {
   try {
     await connectDB();
-    const { branchCode } = req.params;
+    const { id } = req.params;
 
-    const query = mongoose.Types.ObjectId.isValid(branchCode)
-      ? { _id: branchCode }
-      : { branchCode: branchCode };
+    const query = mongoose.Types.ObjectId.isValid(id)
+      ? { _id: id }
+      : { branchCode: id };
 
     const deletedBranch = await Branch.findOneAndDelete(query);
 
