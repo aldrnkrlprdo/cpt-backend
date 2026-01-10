@@ -22,7 +22,7 @@ exports.createLoanType = async (req, res) => {
       return res.status(400).json({ error: 'Loan type with this name already exists.' });
     }
 
-    const newLoanType = new LoanType({ loanTypeName });
+    const newLoanType = new LoanType({ loanTypeCode, loanTypeName });
     await newLoanType.save();
 
     res.status(201).json({ message: 'Loan type created successfully', loanType: newLoanType });
