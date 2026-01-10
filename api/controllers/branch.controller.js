@@ -7,7 +7,11 @@ const mongoose = require('mongoose');
 exports.createBranch = async (req, res) => {
   try {
     await connectDB();
-    const { branchName } = req.body;
+    const { branchCode, branchName } = req.body;
+
+    if (!branchCode) {
+      return res.status(400).json({ error: 'Branch code is required.' });
+    }
 
     if (!branchName) {
       return res.status(400).json({ error: 'Branch name is required.' });
@@ -19,7 +23,7 @@ exports.createBranch = async (req, res) => {
       return res.status(400).json({ error: 'Branch with this name already exists.' });
     }
 
-    const newBranch = new Branch({ branchName });
+    const newBranch = new Branch({ branchCode, branchName });
     await newBranch.save();
 
     res.status(201).json({ message: 'Branch created successfully', branch: newBranch });
@@ -41,15 +45,15 @@ exports.getAllBranches = async (req, res) => {
   }
 };
 
-// Get a single branch by ID or branchId
+// Get a single branch by ID or branchCode
 exports.getBranchById = async (req, res) => {
   try {
     await connectDB();
-    const { id } = req.params;
+    const { branchCode } = req.params;
 
-    const query = mongoose.Types.ObjectId.isValid(id)
-      ? { _id: id }
-      : { branchId: id };
+    const query = mongoose.Types.ObjectId.isValid(branchCode)
+      ? { _id: branchCode }
+      : { branchCode: branchCode };
 
     const branch = await Branch.findOne(query);
 
@@ -67,16 +71,16 @@ exports.getBranchById = async (req, res) => {
 exports.updateBranch = async (req, res) => {
   try {
     await connectDB();
-    const { id } = req.params;
+    const { branchCode } = req.params;
     const { branchName } = req.body;
 
     if (!branchName) {
       return res.status(400).json({ error: 'Branch name is required.' });
     }
 
-    const query = mongoose.Types.ObjectId.isValid(id)
-      ? { _id: id }
-      : { branchId: id };
+    const query = mongoose.Types.ObjectId.isValid(branchCode)
+      ? { _id: branchCode }
+      : { branchCode: branchCode };
 
     const updatedBranch = await Branch.findOneAndUpdate(query, { branchName }, {
       new: true,
@@ -100,11 +104,11 @@ exports.updateBranch = async (req, res) => {
 exports.deleteBranch = async (req, res) => {
   try {
     await connectDB();
-    const { id } = req.params;
+    const { branchCode } = req.params;
 
-    const query = mongoose.Types.ObjectId.isValid(id)
-      ? { _id: id }
-      : { branchId: id };
+    const query = mongoose.Types.ObjectId.isValid(branchCode)
+      ? { _id: branchCode }
+      : { branchCode: branchCode };
 
     const deletedBranch = await Branch.findOneAndDelete(query);
 
