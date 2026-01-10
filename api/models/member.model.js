@@ -27,12 +27,7 @@ const memberSchema = new mongoose.Schema({
     enum: ['active', 'inactive', 'suspended', 'resigned'],
     default: 'active',
   },
-  address: {
-    street: String,
-    city: String,
-    province: String,
-    zipCode: String,
-  },
+  address: String,
   phoneNumber: String,
 }, { timestamps: true });
 
