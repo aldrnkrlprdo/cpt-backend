@@ -7,7 +7,11 @@ const mongoose = require('mongoose');
 exports.createLoanType = async (req, res) => {
   try {
     await connectDB();
-    const { loanTypeName } = req.body;
+    const { loanTypeCode, loanTypeName } = req.body;
+
+    if (!loanTypeCode) {
+      return res.status(400).json({ error: 'Loan type code is required.' });
+    }
 
     if (!loanTypeName) {
       return res.status(400).json({ error: 'Loan type name is required.' });
@@ -40,7 +44,7 @@ exports.getAllLoanTypes = async (req, res) => {
   }
 };
 
-// Get a single loan type by ID or loanTypeId
+// Get a single loan type by ID or loanTypeCode
 exports.getLoanTypeById = async (req, res) => {
   try {
     await connectDB();
@@ -48,7 +52,7 @@ exports.getLoanTypeById = async (req, res) => {
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
-      : { loanTypeId: id };
+      : { loanTypeCode: id };
 
     const loanType = await LoanType.findOne(query);
 
@@ -75,7 +79,7 @@ exports.updateLoanType = async (req, res) => {
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
-      : { loanTypeId: id };
+      : { loanTypeCode: id };
 
     const updatedLoanType = await LoanType.findOneAndUpdate(query, { loanTypeName }, {
       new: true,
@@ -103,7 +107,7 @@ exports.deleteLoanType = async (req, res) => {
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
-      : { loanTypeId: id };
+      : { loanTypeCode: id };
 
     const deletedLoanType = await LoanType.findOneAndDelete(query);
 
