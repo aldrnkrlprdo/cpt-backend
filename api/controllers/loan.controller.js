@@ -2,7 +2,7 @@
 const Loan = require('../models/loan.model');
 const connectDB = require('../lib/db');
 const mongoose = require('mongoose');
-const Employee = require('../models/employee.model'); // Ensure Employee model is registered
+const Member = require('../models/member.model'); // Ensure Employee model is registered
 require('../models/branch.model'); // Ensure Branch model is registered
 require('../models/loanType.model'); // Ensure LoanType model is registered
 
@@ -96,22 +96,17 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
     await connectDB();
     const { employeeId } = req.params;
 
-    console.log(employeeId)
-
     // Find the employee by their custom employeeId or ObjectId
-    const employee = await Employee.findOne({ employeeId: employeeId.toString() || employeeId });
+    const member = await Member.findOne({ employeeId: employeeId });
 
-    console.log("Employee: ", employee);
+    console.log("Employee: ", member);
 
-    if (!employee) {
-      return res.status(404).json({ error: 'Employee not found' });
+    if (!member) {
+      return res.status(404).json({ error: 'Member not found' });
     }
 
     // Use the employee's ObjectId to find their loans
-    const loans = await Loan.find({ employeeId: employeeId.toString() })
-      .populate('employeeId')
-      .populate('branch')
-      .populate('loanType');
+    const loans = await Loan.find({ employeeId: employeeId })
 
     if (!loans || loans.length === 0) {
       // It's better to return an empty array than a 404 if the employee exists but has no loans.
