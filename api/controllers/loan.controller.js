@@ -25,11 +25,23 @@ exports.getAllLoans = async (req, res) => {
     const { employeeId, branch, loanType } = req.query;
     const filter = {};
 
-    if (employeeId) filter.employee = employeeId;
-    if (branch) filter.branch = { $regex: branch, $options: 'i' };
-    if (loanType) filter.loanType = { $regex: loanType, $options: 'i' };
+    if (employeeId) {
+      // Find employee by the string ID to get the ObjectId
+      const employee = await Employee.findOne({ employeeId: employeeId });
+      if (employee) {
+        filter.employeeId = employee._id;
+      } else {
+        // If no employee found, no loans will match.
+        return res.json([]);
+      }
+    }
+    if (branch) filter.branch = branch;
+    if (loanType) filter.loanType = loanType;
 
-    const loans = await Loan.find(filter).populate('employee');
+    const loans = await Loan.find(filter)
+      .populate('employeeId')
+      .populate('branch')
+      .populate('loanType');
     res.json(loans);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -41,7 +53,10 @@ exports.getLoanById = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const loan = await Loan.findById(id).populate('employee');
+    const loan = await Loan.findById(id)
+      .populate('employeeId')
+      .populate('branch')
+      .populate('loanType');
     if (!loan) return res.status(404).json({ error: 'Loan not found' });
     res.json(loan);
   } catch (err) {
@@ -95,7 +110,8 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
       .populate('loanType');
     
     if (!loans || loans.length === 0) {
-      return res.status(404).json({ error: 'No loans found for this employee' });
+      // It's better to return an empty array than a 404 if the employee exists but has no loans.
+      return res.json([]);
     }
 
     res.json(loans);
