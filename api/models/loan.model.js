@@ -5,7 +5,6 @@ const loanSchema = new mongoose.Schema({
   loanId: { 
     type: String,
     unique: true,
-    required: true,
   },
   employeeId: {
     type: String,
