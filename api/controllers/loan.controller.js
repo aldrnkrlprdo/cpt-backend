@@ -96,15 +96,10 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
     await connectDB();
     const { employeeId } = req.params;
 
-    // Build a query that can find an employee by _id or employeeId string
-    const query = mongoose.Types.ObjectId.isValid(employeeId) 
-      ? { _id: employeeId } 
-      : { employeeId: employeeId };
-
-    console.log(employeeId, query)
+    console.log(employeeId)
 
     // Find the employee by their custom employeeId or ObjectId
-    const employee = await Employee.findOne(query);
+    const employee = await Employee.findOne({ employeeId: employeeId.toString() || employeeId });
 
     console.log("Employee: ", employee);
 
@@ -113,11 +108,11 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
     }
 
     // Use the employee's ObjectId to find their loans
-    const loans = await Loan.find({ employeeId: employeeId })
+    const loans = await Loan.find({ employeeId: employeeId.toString() })
       .populate('employeeId')
       .populate('branch')
       .populate('loanType');
-    
+
     if (!loans || loans.length === 0) {
       // It's better to return an empty array than a 404 if the employee exists but has no loans.
       return res.json([]);
