@@ -74,7 +74,7 @@ exports.updateLoan = async (req, res) => {
       ? { _id: id }
       : { loanId: id };
 
-    const updatedLoan = await Loan.findOneAndUpdate(query, payload, { new: true, runValidators: true });
+    const updatedLoan = await Loan.findOneAndUpdate(query, req.body, { new: true, runValidators: true });
     if (!updatedLoan) return res.status(404).json({ error: 'Loan not found' });
     res.json({ message: 'Loan updated successfully', loan: updatedLoan });
   } catch (err) {
