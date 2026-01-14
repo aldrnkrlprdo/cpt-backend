@@ -100,6 +100,8 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
   try {
     await connectDB();
     
+    const { employeeId } = req.params;
+
     // Use the employee's Id to find their loans
     const loans = await Loan.find({ employeeId: employeeId })
 
