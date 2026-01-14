@@ -69,13 +69,12 @@ exports.updateLoan = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const {loanId, ...payload} = req.body;
 
     const query = mongoose.Types.ObjectId.isValid(id)
       ? { _id: id }
       : { loanId: id };
-    console.log(query, payload, req.body)
-    const updatedLoan = await Loan.findByIdAndUpdate(query, payload, { new: true, runValidators: true });
+
+    const updatedLoan = await Loan.findOneAndUpdate(query, payload, { new: true, runValidators: true });
     if (!updatedLoan) return res.status(404).json({ error: 'Loan not found' });
     res.json({ message: 'Loan updated successfully', loan: updatedLoan });
   } catch (err) {
