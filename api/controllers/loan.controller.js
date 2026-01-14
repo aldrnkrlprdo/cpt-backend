@@ -96,8 +96,13 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
     await connectDB();
     const { employeeId } = req.params;
 
-    // Find the employee by their custom employeeId to get their ObjectId
-    const employee = await Employee.findOne({ employeeId: employeeId });
+    // Build a query that can find an employee by _id or employeeId string
+    const query = mongoose.Types.ObjectId.isValid(employeeId) 
+      ? { _id: employeeId } 
+      : { employeeId: employeeId };
+
+    // Find the employee by their custom employeeId or ObjectId
+    const employee = await Employee.findOne(query);
 
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });
