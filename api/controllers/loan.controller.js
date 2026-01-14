@@ -101,6 +101,8 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
       ? { _id: employeeId } 
       : { employeeId: employeeId };
 
+    console.log(employeeId, query)
+
     // Find the employee by their custom employeeId or ObjectId
     const employee = await Employee.findOne(query);
 
