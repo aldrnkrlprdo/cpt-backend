@@ -71,3 +71,24 @@ exports.deleteLoan = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Get all loans for a specific employee
+exports.getAllLoansByEmployeeId = async (req, res) => {
+  try {
+    await connectDB();
+    const { employeeId } = req.params;
+
+    const loans = await Loan.find({ employeeId: employeeId })
+      .populate('employeeId')
+      .populate('branch')
+      .populate('loanType');
+    
+    if (!loans || loans.length === 0) {
+      return res.status(404).json({ error: 'No loans found for this employee' });
+    }
+
+    res.json(loans);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};

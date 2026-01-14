@@ -32,6 +32,27 @@ router.route('/')
 
 /**
  * @swagger
+ * /api/loans/employee/{employeeId}:
+ *   get:
+ *     summary: Get all loans for a specific employee
+ *     tags: [Loans]
+ *     parameters:
+ *       - in: path
+ *         name: employeeId
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: The employee ID
+ *     responses:
+ *       200:
+ *         description: A list of loans for the specified employee
+ *       404:
+ *         description: No loans found for this employee
+ */
+router.route('/employee/:employeeId').get(loanController.getAllLoansByEmployeeId);
+
+/**
+ * @swagger
  * /api/loans/{id}:
  *   get:
  *     summary: Get a loan by ID
