@@ -106,12 +106,14 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
     // Find the employee by their custom employeeId or ObjectId
     const employee = await Employee.findOne(query);
 
+    console.log("Employee: ", employee);
+
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
     // Use the employee's ObjectId to find their loans
-    const loans = await Loan.find({ employeeId: employee._id })
+    const loans = await Loan.find({ employeeId: employeeId })
       .populate('employeeId')
       .populate('branch')
       .populate('loanType');
