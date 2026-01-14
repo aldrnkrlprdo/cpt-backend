@@ -69,7 +69,7 @@ exports.updateLoan = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-
+    console.log(id)
     const query = mongoose.Types.ObjectId.isValid(id)
           ? { _id: id }
           : { loanId: id };
