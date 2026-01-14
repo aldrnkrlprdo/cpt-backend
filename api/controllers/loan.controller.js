@@ -69,7 +69,7 @@ exports.updateLoan = async (req, res) => {
   try {
     await connectDB();
     const { loanId } = req.params;
-    const updatedLoan = await Loan.findByIdAndUpdate({loanId: loanId}, req.body, { new: true, runValidators: true });
+    const updatedLoan = await Loan.findOneAndUpdate({loanId: loanId}, req.body, { new: true, runValidators: true });
     if (!updatedLoan) return res.status(404).json({ error: 'Loan not found' });
     res.json({ message: 'Loan updated successfully', loan: updatedLoan });
   } catch (err) {
