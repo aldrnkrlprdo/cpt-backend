@@ -68,9 +68,8 @@ exports.getLoanById = async (req, res) => {
 exports.updateLoan = async (req, res) => {
   try {
     await connectDB();
-    const { loanId } = req.params;
-    console.log("loanId: ", loanId)
-    const updatedLoan = await Loan.findOneAndUpdate({ loanId: loanId }, req.body, { new: true, runValidators: true });
+    const { id } = req.params;
+    const updatedLoan = await Loan.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
     if (!updatedLoan) return res.status(404).json({ error: 'Loan not found' });
     res.json({ message: 'Loan updated successfully', loan: updatedLoan });
   } catch (err) {
@@ -95,8 +94,7 @@ exports.deleteLoan = async (req, res) => {
 exports.getAllLoansByEmployeeId = async (req, res) => {
   try {
     await connectDB();
-    const { employeeId } = req.params;
-
+    
     // Use the employee's Id to find their loans
     const loans = await Loan.find({ employeeId: employeeId })
 
