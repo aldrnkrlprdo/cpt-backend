@@ -8,23 +8,23 @@ const loanSchema = new mongoose.Schema({
     required: true,
   },
   employeeId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'Employee',
     required: true,
   },
   branch: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'Branch',
     required: true,
   },
   loanType: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'LoanType',
     required: true,
   },
   loanDate: {
     type: Date,
-    default: Date.now,
+    required: true,
   },
   loanAmount: {
     type: Number,
@@ -44,11 +44,11 @@ const loanSchema = new mongoose.Schema({
   },
   totalPayable: {
     type: Number,
-    required: true,
+    // required: true,
   },
   monthlyPayment: {
     type: Number,
-    required: true,
+    // required: true,
   },
 }, { timestamps: true });
 
