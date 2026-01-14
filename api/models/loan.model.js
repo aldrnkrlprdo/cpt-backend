@@ -52,6 +52,23 @@ const loanSchema = new mongoose.Schema({
   },
 }, { timestamps: true });
 
+loanSchema.pre('save', async function (next) {
+  if (this.isNew && !this.loanId) {
+    const Loan = this.constructor;
+    const lastLoan = await Loan.findOne({}, {}, { sort: { 'createdAt': -1 } });
+
+    let nextId;
+    if (lastLoan && lastLoan.loanId) {
+      const lastIdNum = parseInt(lastLoan.loanId, 10);
+      nextId = lastIdNum + 1;
+    } else {
+      nextId = '000001'; // Start from LOAN-100001
+    }
+    this.loanId = nextId;
+  }
+  next();
+});
+
 const Loan = mongoose.model('Loan', loanSchema);
 
 module.exports = Loan;
