@@ -43,11 +43,11 @@ const loanSchema = new mongoose.Schema({
   },
   totalPayable: {
     type: Number,
-    // required: true,
+    required: true,
   },
   monthlyPayment: {
     type: Number,
-    // required: true,
+    required: true,
   },
 }, { timestamps: true });
 

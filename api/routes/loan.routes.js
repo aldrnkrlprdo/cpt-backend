@@ -93,7 +93,7 @@ router.route('/employee/:employeeId').get(loanController.getAllLoansByEmployeeId
  */
 router.route('/:id')
   .get(loanController.getLoanById)
-  .patch(loanController.updateLoan)
+  .put(loanController.updateLoan)
   .delete(loanController.deleteLoan);
 
 module.exports = router;
