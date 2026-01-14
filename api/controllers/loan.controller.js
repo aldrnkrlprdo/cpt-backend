@@ -2,7 +2,7 @@
 const Loan = require('../models/loan.model');
 const connectDB = require('../lib/db');
 const mongoose = require('mongoose');
-require('../models/employee.model'); // Ensure Employee model is registered
+const Employee = require('../models/employee.model'); // Ensure Employee model is registered
 require('../models/branch.model'); // Ensure Branch model is registered
 require('../models/loanType.model'); // Ensure LoanType model is registered
 
@@ -81,7 +81,15 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
     await connectDB();
     const { employeeId } = req.params;
 
-    const loans = await Loan.find({ employeeId: employeeId })
+    // Find the employee by their custom employeeId to get their ObjectId
+    const employee = await Employee.findOne({ employeeId: employeeId });
+
+    if (!employee) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    // Use the employee's ObjectId to find their loans
+    const loans = await Loan.find({ employeeId: employee._id })
       .populate('employeeId')
       .populate('branch')
       .populate('loanType');
