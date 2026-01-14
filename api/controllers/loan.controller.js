@@ -2,6 +2,9 @@
 const Loan = require('../models/loan.model');
 const connectDB = require('../lib/db');
 const mongoose = require('mongoose');
+require('../models/employee.model'); // Ensure Employee model is registered
+require('../models/branch.model'); // Ensure Branch model is registered
+require('../models/loanType.model'); // Ensure LoanType model is registered
 
 // Create a new loan
 exports.createLoan = async (req, res) => {
