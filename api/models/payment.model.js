@@ -5,10 +5,9 @@ const paymentSchema = new mongoose.Schema({
   paymentId: {
     type: String,
     unique: true,
-    required: true,
   },
   employeeId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'Employee',
     required: true,
   },
