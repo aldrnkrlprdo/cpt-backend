@@ -12,6 +12,7 @@ const memberRoutes = require('./routes/member.routes');
 const branchRoutes = require('./routes/branch.routes');
 const loanTypeRoutes = require('./routes/loanType.routes');
 const loans = require('./routes/loan.routes');
+const payments = require('./routes/payment.routes');
 
 const app = express();
 
@@ -45,6 +46,7 @@ app.use('/api/members', express.json({ limit: '10mb' }), memberRoutes);
 app.use('/api/branches', express.json({ limit: '10mb' }), branchRoutes);
 app.use('/api/loan-types', express.json({ limit: '10mb' }), loanTypeRoutes);
 app.use('/api/loans', express.json({ limit: '10mb' }), loans);
+app.use('/payments', express.json({ limit: '10mb' }), payments);
 
 // Optional: simple ping route to keep container warm
 app.get('/api/ping', (req, res) => res.json({ ok: true }));
