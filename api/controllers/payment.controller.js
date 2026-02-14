@@ -76,10 +76,10 @@ exports.getAllPaymentsByEmployeeId = async (req, res) => {
     await connectDB();
     const { employeeId } = req.params;
 
-    const payments = await Payment.find({ employee: employeeId }).populate('employee').populate('loan');
+    const payments = await Payment.find({ employee: employeeId });
     
-    if (!payments) {
-      return res.status(404).json({ error: 'No payments found for this employee' });
+    if (!payments || payments.length === 0) {
+      return res.json([]);
     }
 
     res.json(payments);
