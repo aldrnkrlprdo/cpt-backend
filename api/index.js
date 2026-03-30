@@ -13,6 +13,7 @@ const branchRoutes = require('./routes/branch.routes');
 const loanTypeRoutes = require('./routes/loanType.routes');
 const loans = require('./routes/loan.routes');
 const payments = require('./routes/payment.routes');
+const reportRoutes = require('./routes/report.routes');
 
 const app = express();
 
@@ -33,7 +34,6 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
-console.log(corsOptions)
 app.use(cors(corsOptions));
 app.options(/.*/, cors(corsOptions)); // preflight
 
@@ -47,6 +47,7 @@ app.use('/api/branches', express.json({ limit: '10mb' }), branchRoutes);
 app.use('/api/loan-types', express.json({ limit: '10mb' }), loanTypeRoutes);
 app.use('/api/loans', express.json({ limit: '10mb' }), loans);
 app.use('/api/payments', express.json({ limit: '10mb' }), payments);
+app.use('/api/reports', express.json({ limit: '10mb' }), reportRoutes);
 
 // Optional: simple ping route to keep container warm
 app.get('/api/ping', (req, res) => res.json({ ok: true }));

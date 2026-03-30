@@ -87,7 +87,7 @@ exports.deleteLoan = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const deletedLoan = await Loan.findByIdAndDelete(id);
+    const deletedLoan = await Loan.findOneAndDelete({ loanId: id });
     if (!deletedLoan) return res.status(404).json({ error: 'Loan not found' });
     res.json({ message: 'Loan deleted successfully' });
   } catch (err) {

@@ -90,7 +90,7 @@ router.get('/employee/:employeeId', paymentController.getAllPaymentsByEmployeeId
  */
 router.route('/:id')
   .get(paymentController.getPaymentById)
-  .patch(paymentController.updatePayment)
+  .post(paymentController.updatePayment)
   .delete(paymentController.deletePayment);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 
 const Payment = require('../models/payment.model');
+const Loan = require('../models/loan.model');
 const connectDB = require('../lib/db');
 
 // Create a new payment
@@ -8,6 +9,7 @@ exports.createPayment = async (req, res) => {
     await connectDB();
     const newPayment = new Payment(req.body);
     await newPayment.save();
+    await Loan.findOneAndUpdate({ loanId: req.body.loanId }, { $set: { status: 'In Progress' } }, { new: true });
     res.status(201).json({ message: 'Payment created successfully', payment: newPayment });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -36,7 +38,7 @@ exports.getPaymentById = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const payment = await Payment.findById(id).populate('employee').populate('loan');
+    const payment = await Payment.findOne(id).populate('employee').populate('loan');
     if (!payment) return res.status(404).json({ error: 'Payment not found' });
     res.json(payment);
   } catch (err) {
@@ -49,7 +51,7 @@ exports.updatePayment = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const updatedPayment = await Payment.findByIdAndUpdate(id, req.body, { new: true, runValidators: true });
+    const updatedPayment = await Payment.findOneAndUpdate({ paymentId: id }, req.body, { new: true, runValidators: true });
     if (!updatedPayment) return res.status(404).json({ error: 'Payment not found' });
     res.json({ message: 'Payment updated successfully', payment: updatedPayment });
   } catch (err) {
@@ -62,7 +64,7 @@ exports.deletePayment = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const deletedPayment = await Payment.findByIdAndDelete(id);
+    const deletedPayment = await Payment.findOneAndDelete({paymentId: id});
     if (!deletedPayment) return res.status(404).json({ error: 'Payment not found' });
     res.json({ message: 'Payment deleted successfully' });
   } catch (err) {
@@ -76,8 +78,8 @@ exports.getAllPaymentsByEmployeeId = async (req, res) => {
     await connectDB();
     const { employeeId } = req.params;
 
-    const payments = await Payment.find({ employee: employeeId });
-    
+    const payments = await Payment.find({ employeeId: employeeId })
+
     if (!payments || payments.length === 0) {
       return res.json([]);
     }

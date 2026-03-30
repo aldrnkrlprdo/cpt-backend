@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 exports.createMember = async (req, res) => {
   try {
     await connectDB();
-    const { firstName, lastName, email, employeeId, dateOfJoining, membershipStatus, address, phoneNumber } = req.body;
+    const { firstName, middleName, lastName, email, employeeId, branch, dateOfJoining, membershipStatus, address, phoneNumber } = req.body;
 
     // Check if member with this email already exists
     const existingMemberWithEmail = await Member.findOne({ email });
@@ -25,9 +25,11 @@ exports.createMember = async (req, res) => {
 
     const newMember = new Member({
       firstName,
+      middleName,
       lastName,
       email,
       employeeId,
+      branch,
       dateOfJoining,
       membershipStatus,
       address,
@@ -46,18 +48,23 @@ exports.createMember = async (req, res) => {
 exports.getAllMembers = async (req, res) => {
   try {
     await connectDB();
-    const { name, employeeId, email, status } = req.query;
+    const { firstName, lastName, middleName, employeeId, email, status, branch } = req.query;
     const filter = {};
 
-    if (name) {
-      filter.$or = [
-        { firstName: { $regex: name, $options: 'i' } },
-        { lastName: { $regex: name, $options: 'i' } },
-      ];
+    if (firstName) {
+      filter.firstName = { $regex: firstName, $options: 'i' };
+    }
+
+    if (middleName) {
+      filter.middleName = { $regex: middleName, $options: 'i' };
+    }
+
+    if (lastName) {
+      filter.lastName = { $regex: lastName, $options: 'i' };
     }
 
     if (employeeId) {
-      filter.employeeId = employeeId;
+      filter.employeeId = { $regex: employeeId, $options: 'i' };
     }
 
     if (email) {
@@ -65,10 +72,14 @@ exports.getAllMembers = async (req, res) => {
     }
 
     if (status) {
-      filter.membershipStatus = status;
+      filter.membershipStatus = { $regex: status, $options: 'i' };
     }
 
-    const members = await Member.find(filter);
+    if (branch) {
+      filter.branch = { $regex: branch, $options: 'i' };
+    }
+
+    const members = await Member.find(filter).populate('branch');
     res.json(members);
   } catch (err) {
     console.error('GetAllMembers error:', err);
@@ -84,9 +95,9 @@ exports.getMemberById = async (req, res) => {
     let member;
 
     if (mongoose.Types.ObjectId.isValid(id)) {
-      member = await Member.findById(id);
+      member = await Member.findById(id).populate('branch');
     } else {
-      member = await Member.findOne({ employeeId: id });
+      member = await Member.findOne({ employeeId: id }).populate('branch');
     }
 
     if (!member) {
@@ -104,17 +115,13 @@ exports.updateMember = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const { firstName, lastName, email, dateOfJoining, membershipStatus, address, phoneNumber } = req.body;
-
-    const query = mongoose.Types.ObjectId.isValid(id)
-      ? { _id: id }
-      : { employeeId: id };
+    const { firstName, middleName, lastName, email, branch, dateOfJoining, membershipStatus, address, phoneNumber } = req.body;
 
     const updatedMember = await Member.findOneAndUpdate(
-      query,
-      { firstName, lastName, email, dateOfJoining, membershipStatus, address, phoneNumber },
+      {employeeId: id },
+      { firstName, middleName, lastName, email, branch, dateOfJoining, membershipStatus, address, phoneNumber },
       { new: true, runValidators: true }
-    );
+    ).populate('branch');
 
     if (!updatedMember) {
       return res.status(404).json({ error: 'Member not found' });

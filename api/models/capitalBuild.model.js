@@ -1,6 +1,4 @@
-
 const mongoose = require('mongoose');
-
 const capitalBuildSchema = new mongoose.Schema({
   contributionId: {
     type: String,
@@ -8,7 +6,7 @@ const capitalBuildSchema = new mongoose.Schema({
     required: true,
   },
   employeeId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     ref: 'Employee',
     required: true,
   },
@@ -24,8 +22,13 @@ const capitalBuildSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-}, { timestamps: true });
+}, { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } });
 
-const CapitalBuild = mongoose.model('CapitalBuild', capitalBuildSchema);
+capitalBuildSchema.virtual('employee', {
+  ref: 'Employee',
+  localField: 'employeeId',
+  foreignField: 'employeeId',
+  justOne: true
+});
 
-module.exports = CapitalBuild;
+module.exports = mongoose.model('CapitalBuild', capitalBuildSchema);

@@ -5,6 +5,9 @@ const memberSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  middleName: {
+    type: String,
+  },
   lastName: {
     type: String,
     required: true,
@@ -18,14 +21,17 @@ const memberSchema = new mongoose.Schema({
     type: String,
     unique: true
   },
+  branch: {
+    type: String,
+  },
   dateOfJoining: {
     type: Date,
     default: Date.now,
   },
   membershipStatus: {
     type: String,
-    enum: ['active', 'inactive', 'suspended', 'resigned'],
-    default: 'active',
+    enum: ['Active', 'Inactive', 'Suspended', 'Resigned'],
+    default: 'Active',
   },
   address: String,
   phoneNumber: String,
@@ -38,16 +44,16 @@ memberSchema.pre('save', async function (next) {
     // Find the last member created to determine the next employeeId
     const lastMember = await Member.findOne({}, {}, { sort: { 'employeeId': -1 } });
 
-    let nextId;
+    let nextIdNum;
     if (lastMember && lastMember.employeeId) {
       // Increment the last employeeId
-      nextId = parseInt(lastMember.employeeId, 10) + 1;
+      const lastIdNum = parseInt(lastMember.employeeId, 10);
+      nextIdNum = lastIdNum + 1;
     } else {
-      // This is the first member, start with a base ID (e.g., 100001)
-      nextId = "000001";
+      // This is the first member, start from 1
+      nextIdNum = 1;
     }
-
-    this.employeeId = nextId.toString();
+    this.employeeId = nextIdNum.toString().padStart(6, '0');
   }
   next();
 });

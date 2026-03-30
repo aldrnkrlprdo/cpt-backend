@@ -1,6 +1,4 @@
-
 const mongoose = require('mongoose');
-
 const loanSchema = new mongoose.Schema({
   loanId: { 
     type: String,
@@ -8,17 +6,17 @@ const loanSchema = new mongoose.Schema({
   },
   employeeId: {
     type: String,
-    ref: 'Employee',
+    // ref: 'Employee', // Ref will be handled by virtual property
     required: true,
   },
   branch: {
     type: String,
-    ref: 'Branch',
+    // ref: 'Branch', // Ref will be handled by virtual property
     required: true,
   },
   loanType: {
     type: String,
-    ref: 'LoanType',
+    // ref: 'LoanType', // Ref will be handled by virtual property
     required: true,
   },
   loanDate: {
@@ -49,21 +47,56 @@ const loanSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-}, { timestamps: true });
+  status: {
+    type: String,
+    required: true,
+    enum: ['Not Started', 'In Progress', 'Paid'],
+    default: 'Not Started',
+  }
+}, { 
+  timestamps: true,
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual for populating employee
+loanSchema.virtual('employee', {
+  ref: 'Member',
+  localField: 'employeeId',
+  foreignField: 'employeeId',
+  justOne: true
+});
+
+// Virtual for populating branch
+loanSchema.virtual('branchInfo', {
+  ref: 'Branch',
+  localField: 'branch',
+  foreignField: 'branchId',
+  justOne: true
+});
+
+// Virtual for populating loan type
+loanSchema.virtual('loanTypeInfo', {
+  ref: 'LoanType',
+  localField: 'loanType',
+  foreignField: 'loanTypeId',
+  justOne: true
+});
 
 loanSchema.pre('save', async function (next) {
   if (this.isNew && !this.loanId) {
     const Loan = this.constructor;
     const lastLoan = await Loan.findOne({}, {}, { sort: { 'createdAt': -1 } });
 
-    let nextId;
+    let nextIdNum;
     if (lastLoan && lastLoan.loanId) {
+      // Ensure we handle non-numeric loanId gracefully if they ever occur
       const lastIdNum = parseInt(lastLoan.loanId, 10);
-      nextId = lastIdNum + 1;
+      nextIdNum = isNaN(lastIdNum) ? 1 : lastIdNum + 1;
     } else {
-      nextId = '000001'; // Start from LOAN-100001
+      nextIdNum = 1; // Start from 1
     }
-    this.loanId = nextId;
+    this.loanId = nextIdNum.toString().padStart(6, '0');
   }
   next();
 });

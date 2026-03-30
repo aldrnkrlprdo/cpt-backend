@@ -23,7 +23,22 @@ const paymentSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  paymentType: {
+    type: String,
+    default: 'Contribution',
+  },
+  notes: {
+    type: String,
+    default: '',
+  }
 }, { timestamps: true });
+
+paymentSchema.virtual('member', {
+  ref: 'Member',
+  localField: 'employeeId',
+  foreignField: 'employeeId',
+  justOne: true
+});
 
 paymentSchema.pre('save', async function (next) {
   if (this.isNew && !this.paymentId) {
@@ -35,9 +50,9 @@ paymentSchema.pre('save', async function (next) {
       const lastIdNum = parseInt(lastPayment.paymentId, 10);
       nextIdNum = lastIdNum + 1;
     } else {
-      nextIdNum = '000001'; // Start from 1
+      nextIdNum = 1; // Start from 1
     }
-    this.paymentId = nextIdNum;
+    this.paymentId = nextIdNum.toString().padStart(6, '0');
   }
   next();
 });
