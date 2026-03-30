@@ -58,14 +58,14 @@ app.use((err, req, res, next) => {
 });
 
 // Connect DB once per container
-app.use(async (req, res, next) => {
-  try {
-    await connectDB();
-    next();
-  } catch (err) {
-    res.status(500).json({ error: 'Database connection failed' });
-  }
-});
+// app.use(async (req, res, next) => {
+//   try {
+//     await connectDB();
+//     next();
+//   } catch (err) {
+//     res.status(500).json({ error: 'Database connection failed' });
+//   }
+// });
 
 
 module.exports = app;
