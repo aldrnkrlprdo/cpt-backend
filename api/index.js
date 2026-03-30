@@ -34,9 +34,8 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
+app.options('*', cors(corsOptions)); // preflight
 app.use(cors(corsOptions));
-app.options(/.*/, cors(corsOptions)); // preflight
-
 app.use(cookieParser());
 
 // Per-route JSON parsing (prevents raw-body mismatch)
