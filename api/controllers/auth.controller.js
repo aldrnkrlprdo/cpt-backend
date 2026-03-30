@@ -6,9 +6,9 @@ const connectDB = require('../lib/db'); // ✅ make sure to import this
 // Helper: generate access & refresh tokens
 const generateTokens = (user) => {
   const accessToken = jwt.sign(
-    { id: user._id, role: user.role },
+    { id: user._id, role: user.role, firstName: user.firstName },
     process.env.JWT_SECRET,
-    { expiresIn: '15m' }
+    { expiresIn: '1d' }
   );
 
   const refreshToken = jwt.sign(
