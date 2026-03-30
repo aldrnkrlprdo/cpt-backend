@@ -34,8 +34,10 @@ const corsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
 };
-app.options('*', cors(corsOptions)); // preflight
+console.log(corsOptions)
 app.use(cors(corsOptions));
+app.options(/.*/, cors(corsOptions)); // preflight
+
 app.use(cookieParser());
 
 // Per-route JSON parsing (prevents raw-body mismatch)
@@ -58,14 +60,14 @@ app.use((err, req, res, next) => {
 });
 
 // Connect DB once per container
-// app.use(async (req, res, next) => {
-//   try {
-//     await connectDB();
-//     next();
-//   } catch (err) {
-//     res.status(500).json({ error: 'Database connection failed' });
-//   }
-// });
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    res.status(500).json({ error: 'Database connection failed' });
+  }
+});
 
 
 module.exports = app;
