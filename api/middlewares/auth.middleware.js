@@ -12,7 +12,7 @@ const auth = async (req, res, next) => {
     const user = await User.findById(decoded.id);
     if (!user) return res.status(401).json({ error: 'User not found' });
 
-    req.user = { id: user._id, role: user.role };
+    req.user = { id: user._id, role: user.role, firstName: user.firstName };
     next();
   } catch (err) {
     console.log("Error verifying JWT: ", err.message);
