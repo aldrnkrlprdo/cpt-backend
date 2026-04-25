@@ -47,10 +47,14 @@ const loanSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  remainingBalance: {
+    type: Number,
+    default: 0,
+  },
   status: {
     type: String,
     required: true,
-    enum: ['Not Started', 'In Progress', 'Paid'],
+    enum: ['Not Started', 'In Progress', 'Pending', 'Paid'],
     default: 'Not Started',
   }
 }, { 

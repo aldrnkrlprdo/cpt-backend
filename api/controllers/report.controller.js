@@ -170,6 +170,8 @@ exports.generatePaymentReport = async (req, res) => {
       { header: 'Middle Name', key: 'middleName', width: 15 },
       { header: 'Payment Date', key: 'paymentDate', width: 15, style: { numFmt: 'yyyy-mm-dd' } },
       { header: 'Amount Paid', key: 'amountPaid', width: 15, style: { numFmt: '#,##0.00' } },
+      { header: 'Interest Rebate', key: 'interestRebate', width: 15, style: { numFmt: '#,##0.00' } },
+      { header: 'Fully Paid', key: 'isFullPayment', width: 15 },
     ];
 
     worksheet.getRow(1).font = { bold: true };
@@ -184,6 +186,8 @@ exports.generatePaymentReport = async (req, res) => {
           middleName: member.middleName || '',
           paymentDate: payment.paymentDate,
           amountPaid: payment.amountPaid,
+          interestRebate: payment.interestRebate,
+          isFullPayment: payment.isFullPayment ? 'Yes' : 'No',
         });
       }
     });

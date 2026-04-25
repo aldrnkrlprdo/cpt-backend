@@ -1,6 +1,5 @@
 
 const mongoose = require('mongoose');
-
 const paymentSchema = new mongoose.Schema({
   paymentId: {
     type: String,
@@ -30,6 +29,14 @@ const paymentSchema = new mongoose.Schema({
   notes: {
     type: String,
     default: '',
+  },
+  isFullPayment: {
+    type: Boolean,
+    default: false,
+  },
+  interestRebate: {
+    type: Number,
+    default: 0,
   }
 }, { timestamps: true });
 

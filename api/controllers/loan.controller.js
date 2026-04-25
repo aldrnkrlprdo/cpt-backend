@@ -10,7 +10,29 @@ require('../models/loanType.model'); // Ensure LoanType model is registered
 exports.createLoan = async (req, res) => {
   try {
     await connectDB();
-    const newLoan = new Loan(req.body);
+    const { employeeId } = req.body;
+
+    // Find the last active loan for the employee and update its status to 'Pending'
+    if (employeeId) {
+      const lastActiveLoan = await Loan.findOne({
+        employeeId: employeeId,
+        status: 'In Progress'
+      }).sort({ createdAt: -1 });
+
+      if (lastActiveLoan) {
+        lastActiveLoan.status = 'Pending';
+        await lastActiveLoan.save();
+      }
+    }
+
+    // Create a mutable copy of the request body to modify
+    const loanData = { ...req.body };
+
+    // Set remainingBalance to totalPayable on creation
+    loanData.remainingBalance = loanData.totalPayable;
+
+    // Create and save the new loan using the modified data
+    const newLoan = new Loan(loanData);
     await newLoan.save();
     res.status(201).json({ message: 'Loan created successfully', loan: newLoan });
   } catch (err) {

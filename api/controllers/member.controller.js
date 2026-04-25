@@ -7,12 +7,14 @@ const mongoose = require('mongoose');
 exports.createMember = async (req, res) => {
   try {
     await connectDB();
-    const { firstName, middleName, lastName, email, employeeId, branch, dateOfJoining, membershipStatus, address, phoneNumber } = req.body;
+    const { firstName, middleName, lastName, email, employeeId, branch, dateOfJoining, membershipStatus, address, phoneNumber, civilStatus } = req.body;
 
-    // Check if member with this email already exists
-    const existingMemberWithEmail = await Member.findOne({ email });
-    if (existingMemberWithEmail) {
-      return res.status(400).json({ error: 'Member with this email already exists' });
+    // Check if member with this email already exists, but only if email is provided
+    if (email && email.trim() !== '') {
+      const existingMemberWithEmail = await Member.findOne({ email });
+      if (existingMemberWithEmail) {
+        return res.status(400).json({ error: 'Member with this email already exists' });
+      }
     }
 
     // Check if employeeId is unique
@@ -34,6 +36,7 @@ exports.createMember = async (req, res) => {
       membershipStatus,
       address,
       phoneNumber,
+      civilStatus
     });
 
     await newMember.save();
@@ -115,11 +118,19 @@ exports.updateMember = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const { firstName, middleName, lastName, email, branch, dateOfJoining, membershipStatus, address, phoneNumber } = req.body;
+    const { firstName, middleName, lastName, email, branch, dateOfJoining, membershipStatus, address, phoneNumber, civilStatus } = req.body;
 
+    // If email is being updated, check if it's already in use by another member
+    if (email && email.trim() !== '') {
+      const existingMemberWithEmail = await Member.findOne({ email, employeeId: { $ne: id } });
+      if (existingMemberWithEmail) {
+        return res.status(400).json({ error: 'Member with this email already exists' });
+      }
+    }
+    
     const updatedMember = await Member.findOneAndUpdate(
       {employeeId: id },
-      { firstName, middleName, lastName, email, branch, dateOfJoining, membershipStatus, address, phoneNumber },
+      { firstName, middleName, lastName, email, branch, dateOfJoining, membershipStatus, address, phoneNumber, civilStatus },
       { new: true, runValidators: true }
     ).populate('branch');
 

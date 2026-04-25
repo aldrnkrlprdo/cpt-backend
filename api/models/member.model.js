@@ -14,28 +14,43 @@ const memberSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    unique: true,
-    required: true,
+    trim: true
   },
   employeeId: {
     type: String,
-    unique: true
+    unique: true,
+    required: true,
   },
   branch: {
     type: String,
+    required: true,
   },
   dateOfJoining: {
     type: Date,
     default: Date.now,
+    required: true,
   },
   membershipStatus: {
     type: String,
-    enum: ['Active', 'Inactive', 'Suspended', 'Resigned'],
+    enum: ['Active', 'Resigned', 'Promoted'],
     default: 'Active',
+    required: true,
+  },
+  civilStatus: {
+    type: String,
+    enum: ['Single', 'Married', 'Divorced', 'Widowed'],
+    default: 'Single',
+    required: true,
   },
   address: String,
   phoneNumber: String,
 }, { timestamps: true });
+
+// Partial unique index for email (allows multiple null/empty emails)
+memberSchema.index({ email: 1 }, {
+  unique: true,
+  partialFilterExpression: { email: { $type: 'string', $ne: '' } }
+});
 
 // Pre-save hook to generate employeeId
 memberSchema.pre('save', async function (next) {

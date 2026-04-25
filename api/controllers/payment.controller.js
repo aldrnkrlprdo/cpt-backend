@@ -7,9 +7,34 @@ const connectDB = require('../lib/db');
 exports.createPayment = async (req, res) => {
   try {
     await connectDB();
+    const { loanId, amountPaid, interestRebate, isFullPayment } = req.body;
+
     const newPayment = new Payment(req.body);
     await newPayment.save();
-    await Loan.findOneAndUpdate({ loanId: req.body.loanId }, { $set: { status: 'In Progress' } }, { new: true });
+
+    if (loanId) {
+      const loan = await Loan.findOne({ loanId: loanId });
+      if (loan) {
+        // Calculate new remaining balance
+        const newRemainingBalance = loan.remainingBalance - amountPaid - (interestRebate || 0);
+
+        // Determine the new status
+        const newStatus = isFullPayment ? 'Paid' : 'In Progress';
+
+        // Update the loan
+        await Loan.findOneAndUpdate(
+          { loanId: loanId },
+          {
+            $set: {
+              status: newStatus,
+              remainingBalance: newRemainingBalance < 0 ? 0 : newRemainingBalance
+            }
+          },
+          { new: true }
+        );
+      }
+    }
+
     res.status(201).json({ message: 'Payment created successfully', payment: newPayment });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -51,8 +76,44 @@ exports.updatePayment = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const updatedPayment = await Payment.findOneAndUpdate({ paymentId: id }, req.body, { new: true, runValidators: true });
-    if (!updatedPayment) return res.status(404).json({ error: 'Payment not found' });
+    const updateData = req.body;
+
+    // Find the original payment before the update
+    const originalPayment = await Payment.findOne({ paymentId: id });
+    if (!originalPayment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    // Update the payment document
+    const updatedPayment = await Payment.findOneAndUpdate({ paymentId: id }, updateData, { new: true, runValidators: true });
+
+    // If the payment is associated with a loan, update the loan's balance and status
+    if (updatedPayment.loanId) {
+      const loan = await Loan.findOne({ loanId: updatedPayment.loanId });
+      if (loan) {
+        // Revert the original payment's effect
+        const balanceAfterReverting = loan.remainingBalance + originalPayment.amountPaid + (originalPayment.interestRebate || 0);
+        
+        // Apply the updated payment's effect
+        const newRemainingBalance = balanceAfterReverting - updatedPayment.amountPaid - (updatedPayment.interestRebate || 0);
+        
+        // Determine the new status
+        const newStatus = updatedPayment.isFullPayment ? 'Paid' : 'In Progress';
+
+        // Update the loan
+        await Loan.findOneAndUpdate(
+          { loanId: updatedPayment.loanId },
+          {
+            $set: {
+              status: newStatus,
+              remainingBalance: newRemainingBalance < 0 ? 0 : newRemainingBalance
+            }
+          },
+          { new: true }
+        );
+      }
+    }
+
     res.json({ message: 'Payment updated successfully', payment: updatedPayment });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -64,8 +125,27 @@ exports.deletePayment = async (req, res) => {
   try {
     await connectDB();
     const { id } = req.params;
-    const deletedPayment = await Payment.findOneAndDelete({paymentId: id});
-    if (!deletedPayment) return res.status(404).json({ error: 'Payment not found' });
+    const deletedPayment = await Payment.findOneAndDelete({ paymentId: id });
+    if (!deletedPayment) {
+      return res.status(404).json({ error: 'Payment not found' });
+    }
+
+    const loan = await Loan.findOne({ loanId: deletedPayment.loanId });
+    if (loan) {
+      const newRemainingBalance = loan.remainingBalance + deletedPayment.amountPaid;
+      const newStatus = newRemainingBalance > 0 ? 'In Progress' : 'Paid';
+
+      await Loan.findOneAndUpdate(
+        { loanId: deletedPayment.loanId },
+        { 
+          $set: { 
+            remainingBalance: newRemainingBalance > loan.totalPayable ? loan.totalPayable : newRemainingBalance,
+            status: newStatus 
+          }
+        }
+      );
+    }
+
     res.json({ message: 'Payment deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
