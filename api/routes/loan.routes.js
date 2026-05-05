@@ -32,6 +32,47 @@ router.route('/')
 
 /**
  * @swagger
+ * /api/loans/bulk-upload:
+ *   post:
+ *     summary: Bulk upload multiple loans
+ *     tags: [Loans]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               loans:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     employeeId:
+ *                       type: string
+ *                     branch:
+ *                       type: string
+ *                     loanType:
+ *                       type: string
+ *                     loanAmount:
+ *                       type: number
+ *                     interest:
+ *                       type: number
+ *                     loanTerm:
+ *                       type: number
+ *                     loanDate:
+ *                       type: string
+ *                       format: date
+ *                     status:
+ *                       type: string
+ *     responses:
+ *       201:
+ *         description: Bulk upload completed
+ */
+router.route('/bulk-upload').post(loanController.bulkUploadLoans);
+
+/**
+ * @swagger
  * /api/loans/employee/{employeeId}:
  *   get:
  *     summary: Get all loans for a specific employee

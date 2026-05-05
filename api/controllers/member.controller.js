@@ -165,3 +165,166 @@ exports.deleteMember = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// Validate bulk member upload
+exports.validateBulkUpload = async (req, res) => {
+  try {
+    await connectDB();
+    const { members } = req.body;
+
+    if (!Array.isArray(members) || members.length === 0) {
+      return res.status(400).json({ error: 'Members array is required and cannot be empty' });
+    }
+
+    const valid = [];
+    const invalid = [];
+
+    for (const member of members) {
+      const errors = [];
+
+      // Validate required fields
+      if (!member.firstName || member.firstName.trim() === '') {
+        errors.push('First name is required');
+      }
+      if (!member.lastName || member.lastName.trim() === '') {
+        errors.push('Last name is required');
+      }
+
+      // Validate email format if provided
+      if (member.email && member.email.trim() !== '') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(member.email)) {
+          errors.push('Invalid email format');
+        }
+
+        // Check if email already exists
+        const existingMemberWithEmail = await Member.findOne({ email: member.email });
+        if (existingMemberWithEmail) {
+          errors.push('Email already exists in the system');
+        }
+      }
+
+      // Validate employeeId if provided
+      if (member.employeeId !== undefined && member.employeeId !== null && member.employeeId !== '') {
+        const existingMemberWithId = await Member.findOne({ employeeId: member.employeeId });
+        if (existingMemberWithId) {
+          errors.push('Employee ID already exists in the system');
+        }
+      }
+
+      // Validate phone number format if provided
+      if (member.phoneNumber && member.phoneNumber.trim() !== '') {
+        const phoneRegex = /^[0-9+\-\s()]+$/;
+        if (!phoneRegex.test(member.phoneNumber)) {
+          errors.push('Invalid phone number format');
+        }
+      }
+
+      // Validate membership status
+      const validStatuses = ['Active', 'Inactive', 'Suspended'];
+      if (member.membershipStatus && !validStatuses.includes(member.membershipStatus)) {
+        errors.push(`Invalid membership status. Must be one of: ${validStatuses.join(', ')}`);
+      }
+
+      // Validate civil status
+      const validCivilStatuses = ['Single', 'Married', 'Widowed', 'Divorced', 'Separated'];
+      if (member.civilStatus && !validCivilStatuses.includes(member.civilStatus)) {
+        errors.push(`Invalid civil status. Must be one of: ${validCivilStatuses.join(', ')}`);
+      }
+
+      // Validate date format if provided
+      if (member.dateOfJoining) {
+        const date = new Date(member.dateOfJoining);
+        if (isNaN(date.getTime())) {
+          errors.push('Invalid date of joining format');
+        }
+      }
+
+      if (errors.length > 0) {
+        invalid.push({ member, errors });
+      } else {
+        valid.push(member);
+      }
+    }
+
+    res.json({ valid, invalid });
+  } catch (err) {
+    console.error('ValidateBulkUpload error:', err);
+    res.status(500).json({ error: 'Failed to validate bulk upload', details: err.message });
+  }
+};
+
+// Bulk upload members
+exports.bulkUploadMembers = async (req, res) => {
+  try {
+    await connectDB();
+    const { members } = req.body;
+
+    if (!Array.isArray(members) || members.length === 0) {
+      return res.status(400).json({ error: 'Members array is required and cannot be empty' });
+    }
+
+    const success = [];
+    const failed = [];
+
+    for (const memberData of members) {
+      try {
+        // Validate required fields
+        if (!memberData.firstName || memberData.firstName.trim() === '') {
+          throw new Error('First name is required');
+        }
+        if (!memberData.lastName || memberData.lastName.trim() === '') {
+          throw new Error('Last name is required');
+        }
+
+        // Check if member with this email already exists, but only if email is provided
+        if (memberData.email && memberData.email.trim() !== '') {
+          const existingMemberWithEmail = await Member.findOne({ email: memberData.email });
+          if (existingMemberWithEmail) {
+            throw new Error('Member with this email already exists');
+          }
+        }
+
+        // Check if employeeId is unique if provided
+        if (memberData.employeeId !== undefined && memberData.employeeId !== null && memberData.employeeId !== '') {
+          const existingMemberWithId = await Member.findOne({ employeeId: memberData.employeeId });
+          if (existingMemberWithId) {
+            throw new Error('Employee ID is already in use');
+          }
+        }
+
+        // Create new member
+        const newMember = new Member({
+          firstName: memberData.firstName,
+          middleName: memberData.middleName,
+          lastName: memberData.lastName,
+          email: memberData.email,
+          employeeId: memberData.employeeId,
+          branch: memberData.branch,
+          dateOfJoining: memberData.dateOfJoining || new Date().getDate(),
+          membershipStatus: memberData.membershipStatus || 'Active',
+          address: memberData.address,
+          phoneNumber: memberData.phoneNumber,
+          civilStatus: memberData.civilStatus
+        });
+
+        await newMember.save();
+        success.push(newMember);
+      } catch (err) {
+        failed.push({
+          member: memberData,
+          error: err.message
+        });
+      }
+    }
+
+    res.status(201).json({
+      message: `Bulk upload completed. ${success.length} members created, ${failed.length} failed.`,
+      success,
+      failed
+    });
+  } catch (err) {
+    console.error('BulkUploadMembers error:', err);
+    res.status(500).json({ error: 'Failed to process bulk upload', details: err.message });
+  }
+};

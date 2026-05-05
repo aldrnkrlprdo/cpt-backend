@@ -1,4 +1,3 @@
-
 const Loan = require('../models/loan.model');
 const connectDB = require('../lib/db');
 const mongoose = require('mongoose');
@@ -133,6 +132,125 @@ exports.getAllLoansByEmployeeId = async (req, res) => {
     }
 
     res.json(loans);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Bulk upload loans
+exports.bulkUploadLoans = async (req, res) => {
+  try {
+    await connectDB();
+    const { loans } = req.body;
+
+    if (!Array.isArray(loans) || loans.length === 0) {
+      return res.status(400).json({ error: 'Invalid request: loans array is required' });
+    }
+
+    const results = {
+      success: [],
+      failed: []
+    };
+
+    for (const [index, loanData ]of loans.entries()) {
+      try {
+        const { employeeId, branch, loanType, loanAmount, interest, loanTerm, loanDate, maturityDate, status, loanId  } = loanData;
+
+         if (!employeeId || !branch || !loanType || !loanAmount || !interest || !loanTerm || !loanDate) {
+          results.failed.push({
+            loan: loanData,
+            error: {
+              row: index + 1,
+              employeeId: employeeId || '',
+              loanId: loanId || '',
+              message: 'Missing required fields'
+            }
+          });
+          continue;
+        }
+
+        // Check if loanId is provided and not empty, validate uniqueness
+        if (loanId && loanId.trim() !== '') {
+          const existingLoan = await Loan.findOne({ loanId: loanId.trim() });
+          if (existingLoan) {
+            results.failed.push({
+            loan: loanData,
+              error: {
+                row: index + 1,
+                employeeId: employeeId,
+                loanId: loanId,
+                message: `Loan ID ${loanId} already exists`
+              }
+          });
+          continue;
+          }
+        }
+
+        // Use provided maturityDate if present, otherwise calculate
+        let maturity;
+        if (maturityDate) {
+          maturity = new Date(maturityDate);
+        } else {
+          const startDate = new Date(loanDate);
+          maturity = new Date(startDate);
+          maturity.setMonth(maturity.getMonth() + parseInt(loanTerm));
+        }
+
+        // Calculate total payable and monthly payment
+        const principal = parseFloat(loanAmount);
+        const rate = parseFloat(interest) / 100; // monthly rate
+        const term = parseInt(loanTerm);
+
+        // Calculate total interest
+        const totalInterest = principal * rate * term;
+
+        // Calculate total payable
+        const totalPayable = principal + totalInterest;
+
+        // Calculate monthly payment
+        const monthlyPayment = totalPayable / term;
+
+        const newLoan = new Loan({
+          employeeId,
+          branch,
+          loanType,
+          loanAmount: principal,
+          interest,
+          loanTerm: term,
+          loanDate: new Date(loanDate),
+          maturityDate: maturity,
+          totalPayable: Math.round(totalPayable * 100) / 100,
+          monthlyPayment: Math.round(monthlyPayment * 100) / 100,
+          remainingBalance: Math.round(totalPayable * 100) / 100,
+          status: status || 'In Progress'
+        });
+
+        // Override loanId if provided and not empty
+        if (loanId && loanId.trim() !== '') {
+          newLoan.loanId = loanId.trim().toString().padStart(6, '0');
+        }
+
+        await newLoan.save();
+        results.success.push(newLoan);
+      } catch (innerError) {
+        results.failed.push({
+          loan: loanData,
+          error: {
+            row: index + 1,
+            employeeId: loanData.employeeId || '',
+            loanId: loanData.loanId || '',
+            message: innerError.message
+          }
+        });
+      }
+    }
+
+    res.status(201).json({
+      message: `Bulk upload completed: ${results.success.length} succeeded, ${results.failed.length} failed`,
+      successCount: results.success.length,
+      failedCount: results.failed.length,
+      failed: results.failed
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -47,7 +47,7 @@ router.route('/')
  *         description: A list of payments for the employee
  */
 router.get('/employee/:employeeId', paymentController.getAllPaymentsByEmployeeId);
-
+router.post('/bulk-upload', paymentController.bulkUploadPayments);
 /**
  * @swagger
  * /api/payments/{id}:

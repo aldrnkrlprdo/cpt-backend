@@ -121,3 +121,114 @@ exports.deleteBranch = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+// Validate bulk branch upload
+exports.validateBulkUpload = async (req, res) => {
+  try {
+    await connectDB();
+    const { branches } = req.body;
+
+    if (!Array.isArray(branches) || branches.length === 0) {
+      return res.status(400).json({ error: 'Branches array is required and cannot be empty' });
+    }
+
+    const valid = [];
+    const invalid = [];
+
+    for (const branch of branches) {
+      const errors = [];
+
+      // Validate required fields
+      if (!branch.branchName || branch.branchName.trim() === '') {
+        errors.push('Branch name is required');
+      }
+
+      // Check if branch name already exists
+      if (branch.branchName && branch.branchName.trim() !== '') {
+        const existingBranchWithName = await Branch.findOne({ branchName: branch.branchName });
+        if (existingBranchWithName) {
+          errors.push('Branch name already exists in the system');
+        }
+      }
+
+      // Validate branchCode if provided
+      if (branch.branchCode && branch.branchCode.trim() !== '') {
+        const existingBranchWithCode = await Branch.findOne({ branchCode: branch.branchCode });
+        if (existingBranchWithCode) {
+          errors.push('Branch code already exists in the system');
+        }
+      }
+
+      if (errors.length > 0) {
+        invalid.push({ member: branch, errors });
+      } else {
+        valid.push(branch);
+      }
+    }
+
+    res.json({ valid, invalid });
+  } catch (err) {
+    console.error('ValidateBulkUpload error:', err);
+    res.status(500).json({ error: 'Failed to validate bulk upload', details: err.message });
+  }
+};
+
+// Bulk upload branches
+exports.bulkUploadBranches = async (req, res) => {
+  try {
+    await connectDB();
+    const { branches } = req.body;
+
+    if (!Array.isArray(branches) || branches.length === 0) {
+      return res.status(400).json({ error: 'Branches array is required and cannot be empty' });
+    }
+
+    const success = [];
+    const failed = [];
+
+    for (const branchData of branches) {
+      try {
+        // Validate required fields
+        if (!branchData.branchName || branchData.branchName.trim() === '') {
+          throw new Error('Branch name is required');
+        }
+
+        // Check if branch with this name already exists
+        const existingBranchWithName = await Branch.findOne({ branchName: branchData.branchName });
+        if (existingBranchWithName) {
+          throw new Error('Branch with this name already exists');
+        }
+
+        // Check if branchCode is unique if provided
+        if (branchData.branchCode && branchData.branchCode.trim() !== '') {
+          const existingBranchWithCode = await Branch.findOne({ branchCode: branchData.branchCode });
+          if (existingBranchWithCode) {
+            throw new Error('Branch code already exists');
+          }
+        }
+
+        // Create new branch
+        const newBranch = new Branch({
+          branchCode: branchData.branchCode,
+          branchName: branchData.branchName
+        });
+
+        await newBranch.save();
+        success.push(newBranch);
+      } catch (err) {
+        failed.push({
+          member: branchData,
+          error: err.message
+        });
+      }
+    }
+
+    res.status(201).json({
+      message: `Bulk upload completed. ${success.length} branches created, ${failed.length} failed.`,
+      success,
+      failed
+    });
+  } catch (err) {
+    console.error('BulkUploadBranches error:', err);
+    res.status(500).json({ error: 'Failed to process bulk upload', details: err.message });
+  }
+};
