@@ -47,6 +47,20 @@ paymentSchema.virtual('member', {
   justOne: true
 });
 
+paymentSchema.virtual('employee', {
+  ref: 'Member',
+  localField: 'employeeId',
+  foreignField: 'employeeId',
+  justOne: true
+});
+
+paymentSchema.virtual('loan', {
+  ref: 'Loan',
+  localField: 'loanId',
+  foreignField: 'loanId',
+  justOne: true
+});
+
 paymentSchema.pre('save', async function (next) {
   if (this.isNew && !this.paymentId) {
     const Payment = this.constructor;

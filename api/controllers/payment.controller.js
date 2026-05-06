@@ -319,7 +319,7 @@ exports.bulkUploadPayments = async (req, res) => {
                 filter: { loanId },
                 update: {
                   $set: {
-                    remainingBalance: newBalance < 0 ? 0 : newBalance,
+                    remainingBalance: newBalance,
                     status: newStatus,
                     updatedAt: new Date()
                   }

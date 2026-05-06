@@ -11,5 +11,6 @@ router.get('/loans', reportController.generateLoanReport);
 router.get('/members', reportController.generateMemberReport);
 router.get('/payments', reportController.generatePaymentReport);
 router.get('/capital', reportController.generateCapitalReport);
+router.post('/schedule-of-accounts', reportController.generateScheduleOfAccounts);
 
 module.exports = router;

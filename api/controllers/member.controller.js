@@ -82,7 +82,7 @@ exports.getAllMembers = async (req, res) => {
       filter.branch = { $regex: branch, $options: 'i' };
     }
 
-    const members = await Member.find(filter).populate('branch');
+    const members = await Member.find(filter).populate('branch').sort('lastName');
     res.json(members);
   } catch (err) {
     console.error('GetAllMembers error:', err);
