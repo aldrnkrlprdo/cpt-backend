@@ -9,7 +9,6 @@ const router = express.Router();
 router.use(auth);
 
 // Bulk upload routes - must be defined before /:id route
-router.post('/bulk/validate', role('admin'), branchController.validateBulkUpload);
 router.post('/bulk', role('admin'), branchController.bulkUploadBranches);
 
 router.post('/', role('admin'), branchController.createBranch);

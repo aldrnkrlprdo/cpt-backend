@@ -13,7 +13,6 @@ router.route('/')
   .post(memberController.createMember);
 
 // Bulk upload routes - must be defined before /:id route
-router.post('/bulk/validate', memberController.validateBulkUpload);
 router.post('/bulk', memberController.bulkUploadMembers);
 
 router.route('/:id')
