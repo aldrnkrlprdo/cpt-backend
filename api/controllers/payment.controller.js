@@ -187,9 +187,14 @@ exports.bulkUploadPayments = async (req, res) => {
       errors: []
     };
 
-    // Fetch the last payment document
-    const lastPayment = await Payment.findOne({}, {}, { sort: { paymentId: -1 } });
-    let lastPaymentIdNum = lastPayment ? parseInt(lastPayment.paymentId, 10) : 0;
+    // Fetch the last numeric paymentId to avoid string-sort issues
+    const lastPaymentAgg = await Payment.aggregate([
+      { $match: { paymentId: { $exists: true, $ne: null } } },
+      { $project: { numericId: { $toInt: '$paymentId' } } },
+      { $group: { _id: null, maxId: { $max: '$numericId' } } }
+    ]);
+    let lastPaymentIdNum = lastPaymentAgg[0]?.maxId || 0;
+    const assignedPaymentIds = new Set();
 
     // Pre-fetch all unique employeeIds
     const uniqueEmployeeIds = [...new Set(payments.map(p => p.employeeId).filter(Boolean))];
@@ -266,10 +271,27 @@ exports.bulkUploadPayments = async (req, res) => {
       // Generate paymentId
       lastPaymentIdNum++;
       const newPaymentId = lastPaymentIdNum.toString().padStart(6, '0');
+      const normalizedPaymentId = (paymentId !== undefined && paymentId !== null && paymentId !== '-' && paymentId !== '')
+        ? paymentId.toString().padStart(6, '0')
+        : newPaymentId;
+
+      if (assignedPaymentIds.has(normalizedPaymentId)) {
+        results.errors.push({
+          row: i + 1,
+          employeeId,
+          paymentId: normalizedPaymentId,
+          paymentType,
+          amountPaid,
+          message: 'Duplicate paymentId in upload batch'
+        });
+        results.failed++;
+        continue;
+      }
+      assignedPaymentIds.add(normalizedPaymentId);
 
       // Prepare payment document
       batchPayments.push({
-        paymentId: paymentId ? paymentId.toString().padStart(6, '0') : newPaymentId,
+        paymentId: normalizedPaymentId,
         employeeId,
         loanId: loan ? loan.loanId : null,
         paymentType,
