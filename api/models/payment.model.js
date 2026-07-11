@@ -1,5 +1,40 @@
 
 const mongoose = require('mongoose');
+
+const normalizePaymentId = (paymentId) => {
+  if (paymentId === undefined || paymentId === null || paymentId === '' || paymentId === '-') {
+    return null;
+  }
+
+  const trimmedValue = String(paymentId).trim();
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const numericValue = Number(trimmedValue);
+  if (Number.isInteger(numericValue)) {
+    return String(numericValue).padStart(6, '0');
+  }
+
+  return trimmedValue.padStart(6, '0');
+};
+
+const generateNextPaymentId = (existingPaymentIds = []) => {
+  let highestNumericId = 0;
+
+  for (const paymentId of existingPaymentIds) {
+    const normalizedId = normalizePaymentId(paymentId);
+    if (!normalizedId) continue;
+
+    const numericValue = Number(normalizedId);
+    if (Number.isInteger(numericValue) && numericValue > highestNumericId) {
+      highestNumericId = numericValue;
+    }
+  }
+
+  return String(highestNumericId + 1).padStart(6, '0');
+};
+
 const paymentSchema = new mongoose.Schema({
   paymentId: {
     type: String,
@@ -64,20 +99,18 @@ paymentSchema.virtual('loan', {
 paymentSchema.pre('save', async function (next) {
   if (this.isNew && !this.paymentId) {
     const Payment = this.constructor;
-    const lastPayment = await Payment.findOne({}, {}, { sort: { 'createdAt': -1 } });
+    const existingPayments = await Payment.find(
+      { paymentId: { $exists: true, $ne: null } },
+      { paymentId: 1, _id: 0 }
+    ).lean();
 
-    let nextIdNum;
-    if (lastPayment && lastPayment.paymentId) {
-      const lastIdNum = parseInt(lastPayment.paymentId, 10);
-      nextIdNum = lastIdNum + 1;
-    } else {
-      nextIdNum = 1; // Start from 1
-    }
-    this.paymentId = nextIdNum.toString().padStart(6, '0');
+    this.paymentId = generateNextPaymentId(existingPayments.map((payment) => payment.paymentId));
   }
+
   next();
 });
 
 const Payment = mongoose.model('Payment', paymentSchema);
+Payment.generateNextPaymentId = generateNextPaymentId;
 
 module.exports = Payment;

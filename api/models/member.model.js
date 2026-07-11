@@ -1,5 +1,40 @@
 
 const mongoose = require('mongoose');
+
+const normalizeEmployeeId = (employeeId) => {
+  if (employeeId === undefined || employeeId === null || employeeId === '' || employeeId === '-') {
+    return null;
+  }
+
+  const trimmedValue = String(employeeId).trim();
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const numericValue = Number(trimmedValue);
+  if (Number.isInteger(numericValue)) {
+    return String(numericValue).padStart(6, '0');
+  }
+
+  return trimmedValue.padStart(6, '0');
+};
+
+const generateNextEmployeeId = (existingEmployeeIds = []) => {
+  let highestNumericId = 0;
+
+  for (const employeeId of existingEmployeeIds) {
+    const normalizedId = normalizeEmployeeId(employeeId);
+    if (!normalizedId) continue;
+
+    const numericValue = Number(normalizedId);
+    if (Number.isInteger(numericValue) && numericValue > highestNumericId) {
+      highestNumericId = numericValue;
+    }
+  }
+
+  return String(highestNumericId + 1).padStart(6, '0');
+};
+
 const memberSchema = new mongoose.Schema({
   firstName: {
     type: String,
@@ -56,21 +91,17 @@ memberSchema.index({ email: 1 }, {
 memberSchema.pre('save', async function (next) {
   if (this.isNew && !this.employeeId) {
     const Member = this.constructor;
-    // Find the last member created to determine the next employeeId
-    const lastMember = await Member.findOne({}, {}, { sort: { 'employeeId': -1 } });
+    const existingMembers = await Member.find(
+      { employeeId: { $exists: true, $ne: null } },
+      { employeeId: 1, _id: 0 }
+    ).lean();
 
-    let nextIdNum;
-    if (lastMember && lastMember.employeeId) {
-      // Increment the last employeeId
-      const lastIdNum = parseInt(lastMember.employeeId, 10);
-      nextIdNum = lastIdNum + 1;
-    } else {
-      // This is the first member, start from 1
-      nextIdNum = 1;
-    }
-    this.employeeId = nextIdNum.toString().padStart(6, '0');
+    this.employeeId = generateNextEmployeeId(existingMembers.map((member) => member.employeeId));
   }
   next();
 });
 
-module.exports = mongoose.model('Member', memberSchema);
+const Member = mongoose.model('Member', memberSchema);
+Member.generateNextEmployeeId = generateNextEmployeeId;
+
+module.exports = Member;

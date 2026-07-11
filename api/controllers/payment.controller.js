@@ -187,14 +187,13 @@ exports.bulkUploadPayments = async (req, res) => {
       errors: []
     };
 
-    // Fetch the last numeric paymentId to avoid string-sort issues
-    const lastPaymentAgg = await Payment.aggregate([
-      { $match: { paymentId: { $exists: true, $ne: null } } },
-      { $project: { numericId: { $toInt: '$paymentId' } } },
-      { $group: { _id: null, maxId: { $max: '$numericId' } } }
-    ]);
-    let lastPaymentIdNum = lastPaymentAgg[0]?.maxId || 0;
+    const existingPaymentIds = await Payment.find(
+      { paymentId: { $exists: true, $ne: null } },
+      { paymentId: 1, _id: 0 }
+    ).lean();
+    const usedPaymentIds = new Set(existingPaymentIds.map((payment) => payment.paymentId).filter(Boolean));
     const assignedPaymentIds = new Set();
+    let nextGeneratedPaymentId = Payment.generateNextPaymentId([...usedPaymentIds]);
 
     // Pre-fetch all unique employeeIds
     const uniqueEmployeeIds = [...new Set(payments.map(p => p.employeeId).filter(Boolean))];
@@ -268,14 +267,12 @@ exports.bulkUploadPayments = async (req, res) => {
         }
       }
 
-      // Generate paymentId
-      lastPaymentIdNum++;
-      const newPaymentId = lastPaymentIdNum.toString().padStart(6, '0');
-      const normalizedPaymentId = (paymentId !== undefined && paymentId !== null && paymentId !== '-' && paymentId !== '')
-        ? paymentId.toString().padStart(6, '0')
-        : newPaymentId;
+      const hasExplicitPaymentId = paymentId !== undefined && paymentId !== null && paymentId !== '-' && paymentId !== '';
+      const normalizedPaymentId = hasExplicitPaymentId
+        ? String(paymentId).trim().padStart(6, '0')
+        : nextGeneratedPaymentId;
 
-      if (assignedPaymentIds.has(normalizedPaymentId)) {
+      if (assignedPaymentIds.has(normalizedPaymentId) || usedPaymentIds.has(normalizedPaymentId)) {
         results.errors.push({
           row: i + 1,
           employeeId,
@@ -288,6 +285,11 @@ exports.bulkUploadPayments = async (req, res) => {
         continue;
       }
       assignedPaymentIds.add(normalizedPaymentId);
+      usedPaymentIds.add(normalizedPaymentId);
+
+      if (!hasExplicitPaymentId) {
+        nextGeneratedPaymentId = Payment.generateNextPaymentId([...usedPaymentIds]);
+      }
 
       // Prepare payment document
       batchPayments.push({

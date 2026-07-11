@@ -1,4 +1,39 @@
 const mongoose = require('mongoose');
+
+const normalizeLoanId = (loanId) => {
+  if (loanId === undefined || loanId === null || loanId === '' || loanId === '-') {
+    return null;
+  }
+
+  const trimmedValue = String(loanId).trim();
+  if (!trimmedValue) {
+    return null;
+  }
+
+  const numericValue = Number(trimmedValue);
+  if (Number.isInteger(numericValue)) {
+    return String(numericValue).padStart(6, '0');
+  }
+
+  return trimmedValue.padStart(6, '0');
+};
+
+const generateNextLoanId = (existingLoanIds = []) => {
+  let highestNumericId = 0;
+
+  for (const loanId of existingLoanIds) {
+    const normalizedId = normalizeLoanId(loanId);
+    if (!normalizedId) continue;
+
+    const numericValue = Number(normalizedId);
+    if (Number.isInteger(numericValue) && numericValue > highestNumericId) {
+      highestNumericId = numericValue;
+    }
+  }
+
+  return String(highestNumericId + 1).padStart(6, '0');
+};
+
 const loanSchema = new mongoose.Schema({
   loanId: { 
     type: String,
@@ -90,21 +125,17 @@ loanSchema.virtual('loanTypeInfo', {
 loanSchema.pre('save', async function (next) {
   if (this.isNew && !this.loanId) {
     const Loan = this.constructor;
-    const lastLoan = await Loan.findOne({}, {}, { sort: { 'createdAt': -1 } });
+    const existingLoans = await Loan.find(
+      { loanId: { $exists: true, $ne: null } },
+      { loanId: 1, _id: 0 }
+    ).lean();
 
-    let nextIdNum;
-    if (lastLoan && lastLoan.loanId) {
-      // Ensure we handle non-numeric loanId gracefully if they ever occur
-      const lastIdNum = parseInt(lastLoan.loanId, 10);
-      nextIdNum = isNaN(lastIdNum) ? 1 : lastIdNum + 1;
-    } else {
-      nextIdNum = 1; // Start from 1
-    }
-    this.loanId = nextIdNum.toString().padStart(6, '0');
+    this.loanId = generateNextLoanId(existingLoans.map((loan) => loan.loanId));
   }
   next();
 });
 
 const Loan = mongoose.model('Loan', loanSchema);
+Loan.generateNextLoanId = generateNextLoanId;
 
 module.exports = Loan;
